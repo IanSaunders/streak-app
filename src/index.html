@@ -181,6 +181,7 @@
     .badge-ok    { background: #dcfce7; color: var(--green); }
     .badge-error { background: #fee2e2; color: var(--red); }
     .badge-none  { background: #f3f4f6; color: var(--gray); }
+    .badge-race  { background: #fef9c3; color: #854d0e; margin-left: 0.4rem; }
 
     /* ── Buttons ── */
     .btn {
@@ -670,6 +671,7 @@
           localDate:      getRunLocalDate(run),
           distance:       run.distance,
           elapsed_time:   run.elapsed_time,
+          isRace:         run.workout_type === 1,
           parsedNumber,
           expectedNumber,
           status,
@@ -875,6 +877,7 @@
           <td class="td-date">${escapeHtml(formatDate(run.localDate))}</td>
           <td class="td-title">
             <a href="https://www.strava.com/activities/${run.id}" target="_blank" rel="noopener">${escapeHtml(run.name)}</a>
+            ${run.isRace ? '<span class="badge badge-race">🏆 Race</span>' : ''}
           </td>
           <td class="td-dist">${formatDistance(run.distance)}</td>
           <td class="td-num">${run.parsedNumber !== null ? run.parsedNumber : '—'}</td>

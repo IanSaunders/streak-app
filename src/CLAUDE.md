@@ -70,18 +70,22 @@ STATE_AUTHENTICATED → refresh token if expired → fetch runs → display dash
 ## Data Structures
 
 ```js
-RunActivity:   { id, name, start_date, start_date_local, sport_type }
-ProcessedRun:  { id, name, localDate, parsedNumber, expectedNumber, status }
-StreakResult:  { streakDays, nextNumber, streakRuns, mostRecentRun }
+RunActivity:   { id, name, start_date, start_date_local, sport_type, workout_type, distance, elapsed_time }
+ProcessedRun:  { id, name, localDate, distance, elapsed_time, isRace, parsedNumber, expectedNumber, status }
+StreakResult:  { streakDays, nextNumber, streakRuns, mostRecentRun, totalDistance, totalTime }
 // status: 'ok' | 'error' | 'no-number'
+// isRace: workout_type === 1
 ```
 
 ## Key Functions
 
 - `getRunLocalDate(run)` — returns `YYYY-MM-DD` from `start_date_local` (preferred) or `start_date`
+- `formatDate(dateStr)` — formats `YYYY-MM-DD` as human-readable e.g. `Sat, 28 Feb`
+- `formatDistance(meters)` — converts metres to `12.3 km`
+- `formatDuration(seconds)` — formats as `4h 32m` or `45m`
 - `parseLastNumber(title)` — regex `/(\d+)/g`, returns last match as number or null
 - `pickStreakRun(runsOnDay, expectedNumber)` — selects the single streak run from a day with multiple activities
-- `computeStreak(runs)` — groups by local date, walks backward to find streak, two-pass picks one run per day, validates sequence
+- `computeStreak(runs)` — groups by local date, walks backward to find streak, two-pass picks one run per day, validates sequence, computes total distance and time
 - `validateStreakNumbers(streakRuns)` — sorts ascending, anchors on most recent numbered run, computes expected offsets, flags mismatches
 - `fetchAllRuns(accessToken, onRun)` — paginates Strava API, filters to run sport types, calls `onRun(name)` per run for loading UI feedback
 - `ensureValidToken()` — refreshes token if within 60s of expiry, returns token string or null
