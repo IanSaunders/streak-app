@@ -437,10 +437,15 @@
 
     /* ── Responsive ── */
     @media (max-width: 640px) {
-      body { padding: 1rem; }
+      body { padding: 0.75rem; }
+      .app-header h1 { font-size: 1.1rem; }
+      .app-header svg { width: 22px; height: 22px; }
       .charts-grid { grid-template-columns: 1fr; }
       .calc-inputs { grid-template-columns: 1fr; }
-      .stat-row { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: repeat(3, 1fr); }
+      .stat-value { font-size: 1.15rem; }
+      .bench-btn { font-size: 0.72rem; padding: 0.25rem 0.5rem; }
+      .tab-btn { font-size: 0.78rem; padding: 0.4rem 0.75rem; }
     }
   </style>
 </head>
@@ -551,43 +556,43 @@ const CHART2_TICK = {
 // color: blue = men, pink = women, gray = avg
 const BENCHMARKS = {
   mile: [
-    { id: 'mens',   label: '♂ WR',  name: 'Hicham El Guerrouj (1999)', sec: 223,    color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Faith Kipyegon (2023)',      sec: 248,    color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Hicham El Guerrouj (1999)', sec: 223,    color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Faith Kipyegon (2023)',      sec: 248,    color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Recreational runner',        sec: 480,    color: '#9ca3af' },
   ],
   '5k': [
-    { id: 'mens',   label: '♂ WR',  name: 'Joshua Cheptegei (2020)',    sec: 755,    color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Gudaf Tsegay (2023)',        sec: 840,    color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Joshua Cheptegei (2020)',    sec: 755,    color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Gudaf Tsegay (2023)',        sec: 840,    color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Average parkrun',            sec: 1740,   color: '#9ca3af' },
   ],
   '10k': [
-    { id: 'mens',   label: '♂ WR',  name: 'Rhonex Kipruto (2020)',      sec: 1584,   color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Agnes Ngetich (2024)',       sec: 1726,   color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Rhonex Kipruto (2020)',      sec: 1584,   color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Agnes Ngetich (2024)',       sec: 1726,   color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Recreational road race',     sec: 3300,   color: '#9ca3af' },
   ],
   half: [
-    { id: 'mens',   label: '♂ WR',  name: 'Jacob Kiplimo (2021)',       sec: 3451,   color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Letesenbet Gidey (2021)',    sec: 3772,   color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Jacob Kiplimo (2021)',       sec: 3451,   color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Letesenbet Gidey (2021)',    sec: 3772,   color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Average half marathon',      sec: 7800,   color: '#9ca3af' },
   ],
   full: [
-    { id: 'mens',   label: '♂ WR',  name: 'Kelvin Kiptum (2023)',       sec: 7235,   color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Ruth Chepngetich (2024)',    sec: 7796,   color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Kelvin Kiptum (2023)',       sec: 7235,   color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Ruth Chepngetich (2024)',    sec: 7796,   color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Average marathon',           sec: 16200,  color: '#9ca3af' },
   ],
   '50k': [
-    { id: 'mens',   label: '♂ WR',  name: 'Road 50K WR',                sec: 9623,   color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Road 50K WR',                sec: 11040,  color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Road 50K WR',                sec: 9623,   color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Road 50K WR',                sec: 11040,  color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Typical trail 50K',          sec: 28800,  color: '#9ca3af' },
   ],
   '50m': [
-    { id: 'mens',   label: '♂ WR',  name: 'Zach Bitter (2019)',         sec: 17842,  color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Camille Herron (2021)',      sec: 20321,  color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Zach Bitter (2019)',         sec: 17842,  color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Camille Herron (2021)',      sec: 20321,  color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Typical trail 50M',          sec: 46800,  color: '#9ca3af' },
   ],
   '100m': [
-    { id: 'mens',   label: '♂ WR',  name: 'Aleksandr Sorokin (2022)',   sec: 39099,  color: '#3b82f6' },
-    { id: 'womens', label: '♀ WR',  name: 'Camille Herron (2017)',      sec: 45760,  color: '#ec4899' },
+    { id: 'mens',   label: '♂︎ WR',  name: 'Aleksandr Sorokin (2022)',   sec: 39099,  color: '#3b82f6' },
+    { id: 'womens', label: '♀︎ WR',  name: 'Ashley Paulson (2026)',      sec: 44374,  color: '#ec4899' },
     { id: 'avg',    label: 'Avg',   name: 'Typical trail 100M',         sec: 108000, color: '#9ca3af' },
   ],
 };
@@ -701,7 +706,7 @@ function buildChart2Data(distKey) {
   const labels = [], data = [];
   for (let t = dist.minT; t <= dist.maxT; t += dist.step) {
     labels.push(t);
-    data.push(dvForTimeSaving(dist.km, t, dt));
+    data.push(dt / (t - dt) * 100);  // % speed increase needed
   }
   return { labels, data };
 }
@@ -857,15 +862,17 @@ function createChart2(canvasId, distKey) {
               return `${formatTimeShort(t)}  ·  ${formatPace(displayPace(t / DISTANCES[distKey].km))}${paceUnit()}`;
             },
             label: (item) => {
-              const dv = item.parsed.y;
-              const dt = CHART2_DT[distKey];
-              return `To save ${formatSave(dt).replace('−','')}: run ${displaySpeed(dv).toFixed(4)} ${speedUnit()} faster`;
+              const pct = item.parsed.y;
+              const t   = item.parsed.x;
+              const dt  = CHART2_DT[activeDistance];
+              const dv  = 3600 * DISTANCES[activeDistance].km / t * pct / 100;
+              return `To save ${formatSave(dt).replace('−','')}: run +${pct.toFixed(2)}% faster  (${displaySpeed(dv).toFixed(2)} ${speedUnit()})`;
             },
             afterLabel: (item) => {
-              const dt = CHART2_DT[distKey];
-              const secPerKm = dt / DISTANCES[distKey].km;
+              const dt = CHART2_DT[activeDistance];
+              const secPerKm = dt / DISTANCES[activeDistance].km;
               const secInUnit = useMiles ? secPerKm * KM_PER_MILE : secPerKm;
-              return `≈ ${secInUnit < 10 ? secInUnit.toFixed(1) : Math.round(secInUnit)} sec${paceUnit()} quicker`;
+              return `= ${secInUnit < 10 ? secInUnit.toFixed(1) : Math.round(secInUnit)} sec${paceUnit()} quicker`;
             },
           }
         },
@@ -885,9 +892,9 @@ function createChart2(canvasId, distKey) {
           title: { display: true, text: 'Finish time', font: { size: 11 } },
         },
         y: {
-          title: { display: true, text: `Speed gain for ${formatSave(CHART2_DT[distKey])} (${speedUnit()})`, font: { size: 11 } },
+          title: { display: true, text: '% speed increase needed', font: { size: 11 } },
           ticks: {
-            callback: (v) => displaySpeed(v).toFixed(3),
+            callback: (v) => `${v.toFixed(2)}%`,
             font: { size: 11 },
           },
         }
@@ -959,6 +966,19 @@ function createChart3(canvasId) {
         },
         y: {
           reverse: true,
+          afterBuildTicks: (axis) => {
+            const { min, max } = axis;
+            if (!isFinite(min) || !isFinite(max)) return;
+            const rangeDisplay = (max - min) * (useMiles ? KM_PER_MILE : 1);
+            const stepDisplay = rangeDisplay <= 300 ? 30 : rangeDisplay <= 600 ? 60 : 120;
+            const rawStep = useMiles ? stepDisplay / KM_PER_MILE : stepDisplay;
+            const startK = Math.ceil(min / rawStep);
+            const endK   = Math.floor(max / rawStep);
+            axis.ticks = [];
+            for (let k = startK; k <= endK; k++) {
+              axis.ticks.push({ value: k * rawStep });
+            }
+          },
           ticks: {
             callback: (v) => formatPace(displayPace(v)),
             font: { size: 11 },
@@ -989,7 +1009,6 @@ function updateChart2ForDistance(distKey) {
   chart.options.scales.x.min = DISTANCES[distKey].minT;
   chart.options.scales.x.max = DISTANCES[distKey].maxT;
   chart.options.scales.x.ticks.stepSize = CHART2_TICK[distKey];
-  chart.options.scales.y.title.text = `Speed gain for ${formatSave(CHART2_DT[distKey])} (${speedUnit()})`;
   chart.update();
 }
 
@@ -1012,7 +1031,7 @@ function updateAnnotations() {
       annots2.userTimePoint = {
         type: 'point',
         xValue: t,
-        yValue: dvForTimeSaving(dist.km, t, CHART2_DT[activeDistance]),
+        yValue: CHART2_DT[activeDistance] / (t - CHART2_DT[activeDistance]) * 100,
         radius: 7,
         backgroundColor: 'rgba(22,163,74,0.85)',
         borderColor: '#fff',
@@ -1128,10 +1147,6 @@ function toggleUnits() {
 
   const chart2 = chartInstances.chart2;
   const chart3 = chartInstances.chart3;
-  if (chart2) {
-    chart2.options.scales.y.title.text = `Speed gain for ${formatSave(CHART2_DT[activeDistance])} (${speedUnit()})`;
-    chart2.update();
-  }
   if (chart3) {
     chart3.options.scales.x.title.text = `Speed (${speedUnit()})`;
     chart3.options.scales.y.title.text = `Pace (min${paceUnit()})`;
@@ -1168,8 +1183,8 @@ function renderApp() {
 
     <div class="benchmark-row" id="benchmark-row">
       <span class="bench-label">Benchmarks:</span>
-      <button class="bench-btn" data-bench="mens">♂ World Record</button>
-      <button class="bench-btn" data-bench="womens">♀ World Record</button>
+      <button class="bench-btn" data-bench="mens">♂&#xFE0E; World Record</button>
+      <button class="bench-btn" data-bench="womens">♀&#xFE0E; World Record</button>
       <button class="bench-btn" data-bench="avg">Avg finisher</button>
     </div>
 
@@ -1181,7 +1196,7 @@ function renderApp() {
       </div>
       <div class="card">
         <div class="card-title">Speed Required to Save <span id="chart2-save-label">5 Min</span> — <span id="chart2-dist-label">Marathon</span></div>
-        <div class="card-subtitle">km/h increase needed at each finish time to hit your time-saving goal</div>
+        <div class="card-subtitle">% speed increase needed at each finish time — steeper curve means faster runners pay more for each time saving</div>
         <div class="chart-container"><canvas id="chart2"></canvas></div>
       </div>
       <div class="card chart-full">
@@ -1222,7 +1237,7 @@ function renderApp() {
         </div>
         <div class="stat-card stat-empty">
           <div class="stat-value" id="stat-dv">—</div>
-          <div class="stat-label">Speed gain for −1 min</div>
+          <div class="stat-label">% faster to save 1 min</div>
         </div>
       </div>
 
@@ -1318,14 +1333,17 @@ function renderCalcResult(distKey, timeSec) {
 
   speedEl.textContent = displaySpeed(speed).toFixed(2);
   paceEl.textContent  = formatPace(displayPace(paceSec));
-  dvEl.textContent    = dv !== null ? displaySpeed(dv).toFixed(4) : '—';
+  const pct = dv !== null ? 60 / (timeSec - 60) * 100 : null;
+  dvEl.textContent    = pct !== null ? `+${pct.toFixed(2)}%` : '—';
   cards.forEach(c => c.classList.remove('stat-empty'));
 
   if (dv !== null) {
     const slowerPaceSec = paceSec * 1.1;
-    const slowerDv = dvForTimeSaving(dist.km, slowerPaceSec * dist.km, 60);
-    const ratio = (dv / slowerDv).toFixed(1);
-    insightEl.innerHTML = `At your current ${dist.label} pace of <strong>${formatPace(displayPace(paceSec))}${paceUnit()}</strong>, you need to increase average speed by <strong>${displaySpeed(dv).toFixed(4)} ${speedUnit()}</strong> to save 1 minute. At <strong>${formatPace(displayPace(slowerPaceSec))}${paceUnit()}</strong> (10% slower), the same saving only costs <strong>${displaySpeed(slowerDv).toFixed(4)} ${speedUnit()}</strong> — <strong>${ratio}×</strong> cheaper.`;
+    const slowerTimeSec = slowerPaceSec * dist.km;
+    const slowerDv = dvForTimeSaving(dist.km, slowerTimeSec, 60);
+    const slowerPct = 60 / (slowerTimeSec - 60) * 100;
+    const ratio = (pct / slowerPct).toFixed(1);
+    insightEl.innerHTML = `At your current ${dist.label} pace of <strong>${formatPace(displayPace(paceSec))}${paceUnit()}</strong>, saving 1 minute requires running <strong>+${pct.toFixed(2)}%</strong> faster (${displaySpeed(dv).toFixed(2)} ${speedUnit()}). At <strong>${formatPace(displayPace(slowerPaceSec))}${paceUnit()}</strong> (10% slower), the same minute only costs <strong>+${slowerPct.toFixed(2)}%</strong> — <strong>${ratio}×</strong> cheaper.`;
     insightEl.classList.remove('empty');
   } else {
     insightEl.textContent = 'Time too short to compute a 1-minute saving.';
