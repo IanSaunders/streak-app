@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strava Streak Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #fc4c02;
+      --orange-dark: #d93f00;
+      --green: #16a34a;
+      --red: #dc2626;
+      --gray: #6b7280;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    #app {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+    .app-header svg { color: var(--orange); }
+    .app-header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    /* ── Hero stat ── */
+    .hero {
+      text-align: center;
+      padding: 2.5rem 1.75rem;
+    }
+    .hero-number {
+      font-size: 5rem;
+      font-weight: 800;
+      color: var(--orange);
+      line-height: 1;
+    }
+    .hero-label {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* ── Next run card ── */
+    .next-run {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .next-number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--orange);
+      min-width: 3.5rem;
+      text-align: center;
+    }
+    .next-run-text h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .next-run-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    thead th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f9fafb; }
+    td {
+      padding: 0.65rem 0.75rem;
+      vertical-align: middle;
+    }
+    .td-title { word-break: break-word; }
+    .td-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .td-title a:hover { text-decoration: underline; color: var(--orange); }
+    .td-date { white-space: nowrap; }
+    .td-num  { text-align: center; font-variant-numeric: tabular-nums; }
+    .td-dist { white-space: nowrap; color: var(--text-muted); }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+    .badge-ok    { background: #dcfce7; color: var(--green); }
+    .badge-error { background: #fee2e2; color: var(--red); }
+    .badge-none  { background: #f3f4f6; color: var(--gray); }
+    .badge-race  { background: #fef9c3; color: #854d0e; margin-left: 0.4rem; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { opacity: 0.7; }
+    .btn-primary   { background: var(--orange); color: #fff; }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger    { background: var(--card); color: var(--red); border: 1px solid #fecaca; }
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    /* ── Forms ── */
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--card);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(252,76,2,0.12); }
+    .form-group { margin-bottom: 1rem; }
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+    .notice {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.82rem;
+      color: #9a3412;
+      margin-top: 1rem;
+    }
+    .notice code {
+      background: rgba(0,0,0,0.07);
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    /* ── Loading spinner ── */
+    .loading-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 2rem;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-msg { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ── Error card ── */
+    .error-card {
+      background: #fff;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .error-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .error-card h2 { font-size: 1.1rem; color: var(--red); margin-bottom: 0.5rem; }
+    .error-card p { color: var(--text-muted); font-size: 0.875rem; }
+
+    /* ── Athlete name ── */
+    .athlete-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .athlete-name {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .athlete-name strong { color: var(--text); }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 540px) {
+      body { padding: 1rem; }
+      .hero-number { font-size: 3.5rem; }
+      .next-number { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Rendered by JS -->
+  </div>
+
+  <!-- Fallback if config.js is missing or fails to load -->
+  <script>window.STRAVA_CONFIG = {};</script>
+  <script src="config.js"></script>
+
+  <script>
+    'use strict';
+
+    // ─── Constants ───────────────────────────────────────────────────────────
+
+    const STRAVA_BASE      = 'https://www.strava.com';
+    const STRAVA_API       = 'https://www.strava.com/api/v3';
+    const PAGE_SIZE        = 200;
+    const MAX_PAGES        = 50; // 50 × 200 = up to 10,000 activities
+    const RUN_SPORT_TYPES  = new Set(['Run', 'TrailRun', 'VirtualRun']);
+
+    const LS = {
+      CLIENT_ID:      'strava_client_id',
+      CLIENT_SECRET:  'strava_client_secret',
+      ACCESS_TOKEN:   'strava_access_token',
+      REFRESH_TOKEN:  'strava_refresh_token',
+      EXPIRES_AT:     'strava_token_expires_at',
+      ATHLETE_NAME:   'strava_athlete_name',
+    };
+
+    // ─── localStorage helpers ─────────────────────────────────────────────────
+
+    function getCredentials() {
+      return {
+        clientId:     localStorage.getItem(LS.CLIENT_ID),
+        clientSecret: localStorage.getItem(LS.CLIENT_SECRET),
+      };
+    }
+
+    function saveCredentials(clientId, clientSecret) {
+      localStorage.setItem(LS.CLIENT_ID,     clientId);
+      localStorage.setItem(LS.CLIENT_SECRET, clientSecret);
+    }
+
+    function getTokens() {
+      return {
+        accessToken:  localStorage.getItem(LS.ACCESS_TOKEN),
+        refreshToken: localStorage.getItem(LS.REFRESH_TOKEN),
+        expiresAt:    parseInt(localStorage.getItem(LS.EXPIRES_AT) || '0', 10),
+      };
+    }
+
+    function saveTokens(response) {
+      localStorage.setItem(LS.ACCESS_TOKEN,  response.access_token);
+      localStorage.setItem(LS.REFRESH_TOKEN, response.refresh_token);
+      localStorage.setItem(LS.EXPIRES_AT,    String(response.expires_at));
+      if (response.athlete) {
+        const a = response.athlete;
+        localStorage.setItem(LS.ATHLETE_NAME, [a.firstname, a.lastname].filter(Boolean).join(' '));
+      }
+    }
+
+    function clearAll() {
+      Object.values(LS).forEach(k => localStorage.removeItem(k));
+    }
+
+    // ─── Token management ─────────────────────────────────────────────────────
+
+    function isTokenExpired() {
+      const { expiresAt } = getTokens();
+      return (expiresAt - 60) <= Math.floor(Date.now() / 1000);
+    }
+
+    async function refreshAccessToken() {
+      const { clientId, clientSecret } = getCredentials();
+      const { refreshToken } = getTokens();
+      if (!clientId || !clientSecret || !refreshToken) {
+        clearAll();
+        return false;
+      }
+      try {
+        const res = await fetch(`${STRAVA_BASE}/oauth/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id:     clientId,
+            client_secret: clientSecret,
+            grant_type:    'refresh_token',
+            refresh_token: refreshToken,
+          }),
+        });
+        if (!res.ok) { clearAll(); return false; }
+        const data = await res.json();
+        saveTokens(data);
+        return true;
+      } catch {
+        clearAll();
+        return false;
+      }
+    }
+
+    async function ensureValidToken() {
+      if (isTokenExpired()) {
+        const ok = await refreshAccessToken();
+        if (!ok) return null;
+      }
+      return getTokens().accessToken;
+    }
+
+    // ─── OAuth ────────────────────────────────────────────────────────────────
+
+    function redirectToStravaOAuth() {
+      const { clientId } = getCredentials();
+      const redirectUri = location.origin + location.pathname;
+      const url = new URL(`${STRAVA_BASE}/oauth/authorize`);
+      url.searchParams.set('client_id',     clientId);
+      url.searchParams.set('redirect_uri',  redirectUri);
+      url.searchParams.set('response_type', 'code');
+      url.searchParams.set('approval_prompt', 'auto');
+      url.searchParams.set('scope',         'activity:read_all');
+      location.href = url.toString();
+    }
+
+    async function handleOAuthCallback() {
+      const params = new URLSearchParams(location.search);
+      if (!params.has('code') && !params.has('error')) return false;
+
+      // Clean URL regardless of outcome
+      const cleanUrl = location.origin + location.pathname;
+
+      if (params.has('error')) {
+        history.replaceState(null, '', cleanUrl);
+        if (params.get('error') === 'access_denied') {
+          renderError('Authorization denied. Please try connecting again.');
+        } else {
+          renderError(`Strava error: ${escapeHtml(params.get('error'))}`);
+        }
+        return true;
+      }
+
+      const code = params.get('code');
+      const { clientId, clientSecret } = getCredentials();
+
+      if (!clientId || !clientSecret) {
+        history.replaceState(null, '', cleanUrl);
+        renderSetup();
+        return true;
+      }
+
+      renderLoading('Connecting to Strava…');
+
+      try {
+        const res = await fetch(`${STRAVA_BASE}/oauth/token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id:     clientId,
+            client_secret: clientSecret,
+            code,
+            grant_type:    'authorization_code',
+          }),
+        });
+
+        history.replaceState(null, '', cleanUrl);
+
+        if (!res.ok) {
+          // Stale or reused code — redirect to setup
+          renderSetup();
+          return true;
+        }
+
+        const data = await res.json();
+        saveTokens(data);
+        await loadAndRenderDashboard();
+      } catch {
+        history.replaceState(null, '', cleanUrl);
+        renderSetup();
+      }
+
+      return true;
+    }
+
+    // ─── Strava API ───────────────────────────────────────────────────────────
+
+    async function stravaGet(path, accessToken) {
+      const res = await fetch(`${STRAVA_API}${path}`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+
+      if (res.status === 401) {
+        clearAll();
+        renderSetup();
+        return null;
+      }
+
+      if (res.status === 429) {
+        renderError('Rate limit reached. Please try again in 15 minutes.');
+        return null;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Strava API error: ${res.status}`);
+      }
+
+      return res.json();
+    }
+
+    async function fetchAllRuns(accessToken, onRun) {
+      const runs = [];
+      let page = 1;
+
+      while (page <= MAX_PAGES) {
+        const activities = await stravaGet(
+          `/athlete/activities?per_page=${PAGE_SIZE}&page=${page}`,
+          accessToken
+        );
+        if (activities === null) return null; // error already rendered
+        if (activities.length === 0) break;
+
+        const pageRuns = activities.filter(
+          a => RUN_SPORT_TYPES.has(a.sport_type) || a.type === 'Run'
+        );
+        for (const run of pageRuns) {
+          if (onRun) onRun(run.name);
+          runs.push(run);
+        }
+
+        if (activities.length < PAGE_SIZE) break;
+        page++;
+      }
+
+      return runs;
+    }
+
+    // ─── Date utilities ───────────────────────────────────────────────────────
+
+    function toLocalDateString(isoString) {
+      const d = new Date(isoString);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // Prefer start_date_local (Strava's local-time field) over converting UTC start_date,
+    // which can land on the wrong calendar day for runs near midnight.
+    function getRunLocalDate(run) {
+      if (run.start_date_local) return run.start_date_local.substring(0, 10);
+      return toLocalDateString(run.start_date);
+    }
+
+    function formatDate(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Intl.DateTimeFormat('en-GB', {
+        weekday: 'short', day: 'numeric', month: 'short',
+      }).format(new Date(y, m - 1, d));
+    }
+
+    function formatDistance(meters) {
+      if (!meters) return '—';
+      return (meters / 1000).toFixed(1) + ' km';
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds) return '—';
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
+    }
+
+    function subtractOneDay(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d - 1);
+      const ny = date.getFullYear();
+      const nm = String(date.getMonth() + 1).padStart(2, '0');
+      const nd = String(date.getDate()).padStart(2, '0');
+      return `${ny}-${nm}-${nd}`;
+    }
+
+    // ─── Data processing ──────────────────────────────────────────────────────
+
+    function parseLastNumber(title) {
+      if (!title) return null;
+      const matches = title.match(/(\d+)/g);
+      if (!matches || matches.length === 0) return null;
+      return parseInt(matches[matches.length - 1], 10);
+    }
+
+    function groupRunsByDate(runs) {
+      const map = new Map();
+      for (const run of runs) {
+        const date = getRunLocalDate(run);
+        if (!map.has(date)) map.set(date, []);
+        map.get(date).push(run);
+      }
+      return map;
+    }
+
+    // On days with multiple runs, pick the one most likely to be the streak run.
+    // Priority: exact expected number match → any numbered title → earliest by time.
+    function pickStreakRun(runsOnDay, expectedNumber = null) {
+      if (runsOnDay.length === 1) return runsOnDay[0];
+
+      const sorted = [...runsOnDay].sort(
+        (a, b) => new Date(a.start_date) - new Date(b.start_date)
+      );
+
+      if (expectedNumber !== null) {
+        const exact = sorted.find(r => parseLastNumber(r.name) === expectedNumber);
+        if (exact) return exact;
+      }
+
+      const withNumber = sorted.filter(r => parseLastNumber(r.name) !== null);
+      if (withNumber.length >= 1) return withNumber[0];
+
+      return sorted[0];
+    }
+
+    function validateStreakNumbers(streakRuns) {
+      // Sort ascending by start_date
+      const sorted = [...streakRuns].sort(
+        (a, b) => new Date(a.start_date) - new Date(b.start_date)
+      );
+
+      // Find anchor: most recent run with a parsed number
+      let anchorIndex = -1;
+      let anchorNumber = null;
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const n = parseLastNumber(sorted[i].name);
+        if (n !== null) {
+          anchorIndex = i;
+          anchorNumber = n;
+          break;
+        }
+      }
+
+      return sorted.map((run, i) => {
+        const parsedNumber = parseLastNumber(run.name);
+        let expectedNumber = null;
+        let status = 'no-number';
+
+        if (anchorIndex !== -1) {
+          expectedNumber = anchorNumber + (i - anchorIndex);
+          if (parsedNumber === null) {
+            status = 'no-number';
+          } else if (parsedNumber === expectedNumber) {
+            status = 'ok';
+          } else {
+            status = 'error';
+          }
+        }
+
+        return {
+          id:             run.id,
+          name:           run.name,
+          localDate:      getRunLocalDate(run),
+          distance:       run.distance,
+          elapsed_time:   run.elapsed_time,
+          isRace:         run.workout_type === 1,
+          parsedNumber,
+          expectedNumber,
+          status,
+        };
+      });
+    }
+
+    function computeStreak(runs) {
+      if (!runs || runs.length === 0) {
+        return { streakDays: 0, nextNumber: null, streakRuns: [], mostRecentRun: null };
+      }
+
+      const byDate = groupRunsByDate(runs);
+
+      // Sort dates descending
+      const allDates = [...byDate.keys()].sort().reverse();
+      if (allDates.length === 0) {
+        return { streakDays: 0, nextNumber: null, streakRuns: [], mostRecentRun: null };
+      }
+
+      // Walk backward from most recent date
+      const streakDates = [];
+      let cursor = allDates[0];
+
+      for (const date of allDates) {
+        if (date === cursor) {
+          streakDates.push(date);
+          cursor = subtractOneDay(cursor);
+        } else {
+          break;
+        }
+      }
+
+      // Process streak dates ascending so we can establish a sequence
+      const streakDatesAsc = [...streakDates].reverse();
+
+      // Pass 1: pick one run per day by heuristic (no sequence knowledge yet)
+      const pass1 = streakDatesAsc.map(date => pickStreakRun(byDate.get(date) || []));
+
+      // Find anchor: most recent picked run that has a number in its title
+      let anchorIdx = -1, anchorNumber = null;
+      for (let i = pass1.length - 1; i >= 0; i--) {
+        const n = parseLastNumber(pass1[i].name);
+        if (n !== null) { anchorIdx = i; anchorNumber = n; break; }
+      }
+
+      // Pass 2: re-pick each day now that we know the expected number
+      const pickedRuns = streakDatesAsc.map((date, i) => {
+        const expected = anchorIdx !== -1 ? anchorNumber + (i - anchorIdx) : null;
+        return pickStreakRun(byDate.get(date) || [], expected);
+      });
+
+      // Validate the one-per-day picks
+      const streakRuns = validateStreakNumbers(pickedRuns);
+
+      // Most recent streak run drives the "next number" display
+      const mostRecentRun = pickedRuns[pickedRuns.length - 1] || null;
+      const lastParsed = mostRecentRun ? parseLastNumber(mostRecentRun.name) : null;
+      const nextNumber = lastParsed !== null ? lastParsed + 1 : null;
+
+      // Totals across all picked streak runs
+      const totalDistance = pickedRuns.reduce((sum, r) => sum + (r.distance || 0), 0);
+      const totalTime     = pickedRuns.reduce((sum, r) => sum + (r.elapsed_time || 0), 0);
+
+      return {
+        streakDays: streakDates.length,
+        nextNumber,
+        streakRuns,
+        mostRecentRun,
+        totalDistance,
+        totalTime,
+      };
+    }
+
+    // ─── HTML escaping ────────────────────────────────────────────────────────
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ─── Rendering ────────────────────────────────────────────────────────────
+
+    function header() {
+      return `
+        <div class="app-header">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <h1>Strava Streak Tracker</h1>
+        </div>
+      `;
+    }
+
+    function renderSetup() {
+      const { clientId, clientSecret } = getCredentials();
+      document.getElementById('app').innerHTML = `
+        ${header()}
+        <div class="card">
+          <div class="card-title">Connect to Strava</div>
+          <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem;">
+            Enter your Strava API credentials to get started. You can find these at
+            <strong>strava.com/settings/api</strong>.
+          </p>
+
+          <div class="form-group">
+            <label for="client-id">Client ID</label>
+            <input type="text" id="client-id" placeholder="12345"
+              value="${escapeHtml(clientId || '')}" autocomplete="off" />
+          </div>
+
+          <div class="form-group">
+            <label for="client-secret">Client Secret</label>
+            <input type="password" id="client-secret" placeholder="••••••••••••••••"
+              value="${escapeHtml(clientSecret || '')}" autocomplete="off" />
+            <p class="form-hint">Stored only in your browser's localStorage.</p>
+          </div>
+
+          <button class="btn btn-primary" id="connect-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Connect with Strava
+          </button>
+
+          <div class="notice">
+            <strong>Important:</strong> This app must be served over HTTP, not opened as a file.
+            Run <code>python3 -m http.server 8080</code> in the <code>src/</code> directory and
+            visit <code>http://localhost:8080/index.html</code>. Make sure
+            <code>localhost</code> is set as the Authorization Callback Domain in your Strava
+            API settings.
+          </div>
+        </div>
+      `;
+
+      document.getElementById('connect-btn').addEventListener('click', () => {
+        const id     = document.getElementById('client-id').value.trim();
+        const secret = document.getElementById('client-secret').value.trim();
+        if (!id || !secret) {
+          alert('Please enter both Client ID and Client Secret.');
+          return;
+        }
+        saveCredentials(id, secret);
+        redirectToStravaOAuth();
+      });
+    }
+
+    function renderLoading(msg = 'Loading…') {
+      document.getElementById('app').innerHTML = `
+        ${header()}
+        <div class="loading-wrap">
+          <div class="spinner"></div>
+          <p class="loading-msg">${escapeHtml(msg)}</p>
+        </div>
+      `;
+    }
+
+    function updateLoadingMsg(msg) {
+      const el = document.querySelector('.loading-msg');
+      if (el) el.textContent = msg;
+    }
+
+    function renderError(msg) {
+      document.getElementById('app').innerHTML = `
+        ${header()}
+        <div class="error-card">
+          <div class="error-icon">⚠️</div>
+          <h2>Something went wrong</h2>
+          <p>${escapeHtml(msg)}</p>
+          <div class="btn-row" style="justify-content:center;margin-top:1.25rem;">
+            <button class="btn btn-secondary" id="reset-btn">Reset & Start Over</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('reset-btn').addEventListener('click', () => {
+        clearAll();
+        renderSetup();
+      });
+    }
+
+    function badgeHtml(status) {
+      if (status === 'ok')       return `<span class="badge badge-ok">✓ OK</span>`;
+      if (status === 'error')    return `<span class="badge badge-error">✗ Error</span>`;
+      return `<span class="badge badge-none">— No #</span>`;
+    }
+
+    function renderDashboard(streakResult) {
+      const { streakDays, nextNumber, streakRuns, mostRecentRun, totalDistance, totalTime } = streakResult;
+      const athleteName = localStorage.getItem(LS.ATHLETE_NAME) || '';
+
+      const errCount = streakRuns.filter(r => r.status === 'error').length;
+
+      // Build table rows (descending by date)
+      const tableRows = [...streakRuns].reverse().map(run => `
+        <tr>
+          <td class="td-date">${escapeHtml(formatDate(run.localDate))}</td>
+          <td class="td-title">
+            <a href="https://www.strava.com/activities/${run.id}" target="_blank" rel="noopener">${escapeHtml(run.name)}</a>
+            ${run.isRace ? '<span class="badge badge-race">🏆 Race</span>' : ''}
+          </td>
+          <td class="td-dist">${formatDistance(run.distance)}</td>
+          <td class="td-num">${run.parsedNumber !== null ? run.parsedNumber : '—'}</td>
+          <td class="td-num">${run.expectedNumber !== null ? run.expectedNumber : '—'}</td>
+          <td>${badgeHtml(run.status)}</td>
+        </tr>
+      `).join('');
+
+      const nextRunCard = nextNumber !== null
+        ? `<div class="card next-run">
+            <div class="next-number">#${nextNumber}</div>
+            <div class="next-run-text">
+              <h3>Next run number</h3>
+              <p>Name your next run with <strong>${nextNumber}</strong> as the last number in the title.</p>
+            </div>
+          </div>`
+        : `<div class="card">
+            <div class="card-title">Next run number</div>
+            <p style="color:var(--text-muted);font-size:0.875rem;">
+              Could not determine next number — the most recent run title doesn't contain a number.
+            </p>
+          </div>`;
+
+      const validationSummary = errCount > 0
+        ? `<span style="color:var(--red);font-size:0.82rem;font-weight:600;">⚠ ${errCount} numbering error${errCount > 1 ? 's' : ''} found</span>`
+        : `<span style="color:var(--green);font-size:0.82rem;font-weight:600;">✓ All numbers look correct</span>`;
+
+      document.getElementById('app').innerHTML = `
+        ${header()}
+
+        <div class="athlete-row">
+          ${athleteName ? `<p class="athlete-name">Signed in as <strong>${escapeHtml(athleteName)}</strong></p>` : '<span></span>'}
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-secondary" id="refresh-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 .49-3.56"/>
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-danger" id="disconnect-btn">
+              Disconnect
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="card hero" style="margin-bottom:0;">
+            <div class="hero-number">${streakDays}</div>
+            <div class="hero-label">day streak</div>
+          </div>
+          ${mostRecentRun ? `
+          <div class="stat-card">
+            <div class="stat-value">${escapeHtml(formatDate(getRunLocalDate(mostRecentRun)))}</div>
+            <div class="stat-label">last run</div>
+          </div>` : ''}
+          <div class="stat-card">
+            <div class="stat-value">${(totalDistance / 1000).toFixed(0)} km</div>
+            <div class="stat-label">total distance</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${formatDuration(totalTime)}</div>
+            <div class="stat-label">total time</div>
+          </div>
+        </div>
+
+        ${nextRunCard}
+
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+            <p class="section-title">Streak Run History</p>
+            ${validationSummary}
+          </div>
+          ${streakRuns.length === 0
+            ? `<p style="color:var(--text-muted);font-size:0.875rem;">No runs in current streak.</p>`
+            : `<div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Title</th>
+                      <th>Distance</th>
+                      <th style="text-align:center;">Parsed #</th>
+                      <th style="text-align:center;">Expected #</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tableRows}
+                  </tbody>
+                </table>
+              </div>`
+          }
+        </div>
+      `;
+
+      document.getElementById('refresh-btn').addEventListener('click', () => {
+        loadAndRenderDashboard();
+      });
+      document.getElementById('disconnect-btn').addEventListener('click', () => {
+        clearAll();
+        renderSetup();
+      });
+    }
+
+    // ─── Orchestration ────────────────────────────────────────────────────────
+
+    async function loadAndRenderDashboard() {
+      renderLoading('Fetching your runs…');
+
+      try {
+        const token = await ensureValidToken();
+        if (!token) {
+          renderSetup();
+          return;
+        }
+
+        const runs = await fetchAllRuns(token, name => {
+          updateLoadingMsg(`Looking at run: ${name}`);
+        });
+        if (runs === null) return; // error already rendered
+
+        const result = computeStreak(runs);
+        renderDashboard(result);
+      } catch (err) {
+        renderError(err.message || 'An unexpected error occurred.');
+      }
+    }
+
+    async function main() {
+      // Seed credentials from config.js (overrides localStorage if both values present)
+      if (STRAVA_CONFIG.clientId && STRAVA_CONFIG.clientSecret) {
+        saveCredentials(STRAVA_CONFIG.clientId, STRAVA_CONFIG.clientSecret);
+      }
+
+      // 1. Check for OAuth callback
+      const handled = await handleOAuthCallback();
+      if (handled) return;
+
+      // 2. Check if we have tokens
+      const { accessToken } = getTokens();
+      if (!accessToken) {
+        renderSetup();
+        return;
+      }
+
+      // 3. Load dashboard
+      await loadAndRenderDashboard();
+    }
+
+    document.addEventListener('DOMContentLoaded', main);
+  </script>
+</body>
+</html>

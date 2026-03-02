@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running Pace & Speed</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #fc4c02;
+      --orange-dark: #d93f00;
+      --green: #16a34a;
+      --red: #dc2626;
+      --gray: #6b7280;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    #app {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+    }
+    .app-header svg { color: var(--orange); flex-shrink: 0; }
+    .app-header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .app-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      padding-left: 0.2rem;
+    }
+
+    /* ── Unit toggle ── */
+    .unit-toggle {
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .unit-toggle button {
+      padding: 0.28rem 0.7rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .unit-toggle button.active {
+      background: var(--orange);
+      color: #fff;
+    }
+    .unit-toggle button:hover:not(.active) {
+      background: #fff7ed;
+      color: var(--orange);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+    .tab-btn {
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { border-color: var(--orange); color: var(--orange); }
+    .tab-btn.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #fff;
+    }
+
+    /* ── Charts grid ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .chart-full { grid-column: 1 / -1; }
+
+    .chart-container {
+      position: relative;
+      height: 260px;
+    }
+
+    /* ── Calculator ── */
+    .calc-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--card);
+      outline: none;
+      transition: border-color 0.15s;
+      font-variant-numeric: tabular-nums;
+    }
+    .form-group input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(252,76,2,0.12);
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* ── Stat cards ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--orange);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+    }
+    .stat-empty .stat-value { color: var(--border); }
+
+    /* ── Presets ── */
+    .preset-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .preset-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      align-self: center;
+      margin-right: 0.25rem;
+      white-space: nowrap;
+    }
+    .preset-btn {
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-variant-numeric: tabular-nums;
+    }
+    .preset-btn:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+      background: #fff7ed;
+    }
+    .preset-btn.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: #fff;
+    }
+
+    /* ── Benchmarks ── */
+    .benchmark-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+    .bench-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      margin-right: 0.1rem;
+    }
+    .bench-btn {
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      border: 1.5px solid;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+    }
+    .bench-btn[data-bench="mens"]   { border-color: #3b82f6; color: #3b82f6; }
+    .bench-btn[data-bench="womens"] { border-color: #ec4899; color: #ec4899; }
+    .bench-btn[data-bench="avg"]    { border-color: #9ca3af; color: #6b7280; border-style: dashed; }
+    .bench-btn.active[data-bench="mens"]   { background: #3b82f6; color: #fff; border-style: solid; }
+    .bench-btn.active[data-bench="womens"] { background: #ec4899; color: #fff; border-style: solid; }
+    .bench-btn.active[data-bench="avg"]    { background: #9ca3af; color: #fff; border-style: solid; }
+    .bench-btn:not(.active) { opacity: 0.5; }
+    .bench-btn:not(.active):hover { opacity: 1; }
+
+    /* ── Insight ── */
+    .insight-box {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.845rem;
+      color: #7c2d12;
+      line-height: 1.5;
+      min-height: 2.5rem;
+    }
+    .insight-box.empty {
+      color: var(--text-muted);
+      background: var(--bg);
+      border-color: var(--border);
+    }
+
+    /* ── Heatmap ── */
+    .heatmap-outer {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .heatmap-wrap {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+    }
+    .heatmap-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 2px;
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      table-layout: fixed;
+    }
+    .heatmap-table th {
+      padding: 0.3rem 0.4rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      white-space: nowrap;
+    }
+    .heatmap-table th.row-label { text-align: right; min-width: 52px; }
+    .heat-legend {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-top: 0.35rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .heat-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      margin-left: 0.5rem;
+    }
+    .heat-swatch:first-child { margin-left: 0; }
+
+    /* ── Heatmap tooltip ── */
+    .heat-tooltip {
+      position: fixed;
+      background: var(--text);
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      max-width: 230px;
+      pointer-events: none;
+      z-index: 200;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: none;
+    }
+    .heat-tooltip-title {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      font-size: 0.82rem;
+    }
+    .heat-tooltip-stat { opacity: 0.85; }
+    .heat-tooltip-note {
+      margin-top: 0.3rem;
+      opacity: 0.65;
+      font-size: 0.72rem;
+      line-height: 1.4;
+    }
+    .heatmap-table td {
+      padding: 0.3rem 0.4rem;
+      text-align: center;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 4px;
+      white-space: nowrap;
+      cursor: default;
+    }
+    .heatmap-table td.pace-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-align: right;
+      padding-right: 0.6rem;
+      background: none;
+    }
+    .heatmap-table tr.user-row td.pace-label {
+      color: var(--orange);
+      font-weight: 700;
+    }
+    .heatmap-table tr.user-row td:not(.pace-label) {
+      outline: 2px solid var(--orange);
+      outline-offset: -2px;
+    }
+
+    /* ── Benchmark reference table ── */
+    .bench-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .bench-table th {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0 0.75rem 0.5rem;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .bench-table td {
+      padding: 0.45rem 0.75rem;
+      border-top: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+      vertical-align: middle;
+    }
+    .bench-table td.bench-cat { white-space: nowrap; font-weight: 700; }
+    .bench-table td.bench-name { color: var(--text-muted); font-size: 0.78rem; }
+    .bench-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .bench-row-hidden { opacity: 0.35; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .calc-inputs { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+'use strict';
+
+// ─── Constants & state ───
+const KM_PER_MILE = 1.60934;
+
+const DISTANCES = {
+  mile: { label: 'Mile',      km: 1.60934,  minT: 210,   maxT: 1200,   step: 10,
+    heatTimes: [240, 270, 300, 330, 360, 420, 480, 600],
+    heatSaves: [10, 20, 30, 45, 60],
+    presets: [
+      { label: 'Sub-4', sec: 3*60+59 },
+      { label: '5:00',  sec: 5*60 },
+      { label: '6:00',  sec: 6*60 },
+      { label: '7:00',  sec: 7*60 },
+    ],
+  },
+  '5k': { label: '5K',       km: 5,        minT: 720,   maxT: 2700,   step: 15,
+    heatTimes: [840, 1020, 1200, 1380, 1500, 1680, 1800, 2100],
+    heatSaves: [30, 60, 90, 120, 180],
+    presets: [
+      { label: '15 min', sec: 15*60 },
+      { label: '20 min', sec: 20*60 },
+      { label: '25 min', sec: 25*60 },
+      { label: '30 min', sec: 30*60 },
+    ],
+  },
+  '10k': { label: '10K',     km: 10,       minT: 1500,  maxT: 5400,   step: 30,
+    heatTimes: [1800, 2100, 2400, 2700, 3000, 3300, 3600, 4200],
+    heatSaves: [60, 120, 180, 300, 600],
+    presets: [
+      { label: '35 min', sec: 35*60 },
+      { label: '40 min', sec: 40*60 },
+      { label: '50 min', sec: 50*60 },
+      { label: '60 min', sec: 60*60 },
+    ],
+  },
+  half: { label: 'Half',     km: 21.0975,  minT: 3300,  maxT: 12600,  step: 60,
+    heatTimes: [3600, 4500, 5400, 6300, 7200, 8100, 9000, 10800],
+    heatSaves: [60, 120, 300, 600, 900],
+    presets: [
+      { label: 'Sub-90', sec: 1*3600+29*60+59 },
+      { label: '1:45',   sec: 1*3600+45*60 },
+      { label: '2:00',   sec: 2*3600 },
+      { label: '2:15',   sec: 2*3600+15*60 },
+    ],
+  },
+  full: { label: 'Marathon',  km: 42.195,   minT: 7200,  maxT: 25200,  step: 120,
+    heatTimes: [9000, 10800, 12600, 14400, 16200, 18000, 19800, 21600],
+    heatSaves: [60, 300, 600, 900, 1800],
+    presets: [
+      { label: 'Sub-3', sec: 2*3600+59*60+59 },
+      { label: '3:30',  sec: 3*3600+30*60 },
+      { label: '4:00',  sec: 4*3600 },
+      { label: '5:00',  sec: 5*3600 },
+    ],
+  },
+  '50k': { label: '50K',     km: 50,       minT: 9000,  maxT: 43200,  step: 300,
+    heatTimes: [10800, 12600, 14400, 16200, 18000, 21600, 25200, 28800],
+    heatSaves: [120, 300, 600, 900, 1800],
+    presets: [
+      { label: 'Sub-4h', sec: 4*3600-1 },
+      { label: '5h',     sec: 5*3600 },
+      { label: '6h',     sec: 6*3600 },
+      { label: '8h',     sec: 8*3600 },
+    ],
+  },
+  '50m': { label: '50 Mile', km: 80.4672,  minT: 17000, maxT: 86400,  step: 600,
+    heatTimes: [21600, 25200, 28800, 32400, 36000, 43200, 50400, 57600],
+    heatSaves: [300, 600, 900, 1800, 3600],
+    presets: [
+      { label: 'Sub-7h', sec: 7*3600-1 },
+      { label: '9h',     sec: 9*3600 },
+      { label: '12h',    sec: 12*3600 },
+      { label: '16h',    sec: 16*3600 },
+    ],
+  },
+  '100m': { label: '100 Mile', km: 160.9344, minT: 37800, maxT: 172800, step: 1800,
+    heatTimes: [50400, 57600, 64800, 72000, 86400, 100800, 115200, 144000],
+    heatSaves: [1800, 3600, 7200, 10800, 21600],
+    presets: [
+      { label: 'Sub-14h', sec: 14*3600-1 },
+      { label: '18h',     sec: 18*3600 },
+      { label: '24h',     sec: 24*3600 },
+      { label: '30h',     sec: 30*3600 },
+    ],
+  },
+};
+
+// Time-saving used in Chart 2 per distance (seconds)
+const CHART2_DT = {
+  mile: 10, '5k': 30, '10k': 60, half: 120, full: 300,
+  '50k': 600, '50m': 1800, '100m': 3600,
+};
+// Regular x-axis tick interval for Chart 2 (seconds)
+const CHART2_TICK = {
+  mile: 60, '5k': 120, '10k': 300, half: 600, full: 1800,
+  '50k': 3600, '50m': 7200, '100m': 14400,
+};
+
+// Benchmark reference times per distance
+// color: blue = men, pink = women, gray = avg
+const BENCHMARKS = {
+  mile: [
+    { id: 'mens',   label: '♂ WR',  name: 'Hicham El Guerrouj (1999)', sec: 223,    color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Faith Kipyegon (2023)',      sec: 248,    color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Recreational runner',        sec: 480,    color: '#9ca3af' },
+  ],
+  '5k': [
+    { id: 'mens',   label: '♂ WR',  name: 'Joshua Cheptegei (2020)',    sec: 755,    color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Gudaf Tsegay (2023)',        sec: 840,    color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Average parkrun',            sec: 1740,   color: '#9ca3af' },
+  ],
+  '10k': [
+    { id: 'mens',   label: '♂ WR',  name: 'Rhonex Kipruto (2020)',      sec: 1584,   color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Agnes Ngetich (2024)',       sec: 1726,   color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Recreational road race',     sec: 3300,   color: '#9ca3af' },
+  ],
+  half: [
+    { id: 'mens',   label: '♂ WR',  name: 'Jacob Kiplimo (2021)',       sec: 3451,   color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Letesenbet Gidey (2021)',    sec: 3772,   color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Average half marathon',      sec: 7800,   color: '#9ca3af' },
+  ],
+  full: [
+    { id: 'mens',   label: '♂ WR',  name: 'Kelvin Kiptum (2023)',       sec: 7235,   color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Ruth Chepngetich (2024)',    sec: 7796,   color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Average marathon',           sec: 16200,  color: '#9ca3af' },
+  ],
+  '50k': [
+    { id: 'mens',   label: '♂ WR',  name: 'Road 50K WR',                sec: 9623,   color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Road 50K WR',                sec: 11040,  color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Typical trail 50K',          sec: 28800,  color: '#9ca3af' },
+  ],
+  '50m': [
+    { id: 'mens',   label: '♂ WR',  name: 'Zach Bitter (2019)',         sec: 17842,  color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Camille Herron (2021)',      sec: 20321,  color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Typical trail 50M',          sec: 46800,  color: '#9ca3af' },
+  ],
+  '100m': [
+    { id: 'mens',   label: '♂ WR',  name: 'Aleksandr Sorokin (2022)',   sec: 39099,  color: '#3b82f6' },
+    { id: 'womens', label: '♀ WR',  name: 'Camille Herron (2017)',      sec: 45760,  color: '#ec4899' },
+    { id: 'avg',    label: 'Avg',   name: 'Typical trail 100M',         sec: 108000, color: '#9ca3af' },
+  ],
+};
+
+let activeDistance = 'full';
+let chartInstances = {};
+let userTime = null;
+let isUpdatingFromCalc = false;
+let debounceTimer = null;
+let useMiles = false;
+let activeBenchmarks = { mens: false, womens: false, avg: false };
+
+// ─── Unit helpers ───
+function speedUnit()            { return useMiles ? 'mph' : 'km/h'; }
+function paceUnit()             { return useMiles ? '/mi' : '/km'; }
+function displaySpeed(kmh)      { return useMiles ? kmh / KM_PER_MILE : kmh; }
+function displayPace(secPerKm)  { return useMiles ? secPerKm * KM_PER_MILE : secPerKm; }
+
+// ─── Math functions ───
+function speedForPace(paceSec) { return 3600 / paceSec; }
+function paceForSpeed(speedKmh) { return 3600 / speedKmh; }
+function dvForTimeSaving(distKm, T, dt) { return 3600 * distKm * dt / (T * (T - dt)); }
+
+function heatColor(pct) {
+  const t = Math.min(pct / 15, 1);
+  let r, g, b;
+  if (t <= 0.5) {
+    const s = t * 2;
+    r = Math.round(22  + (234 - 22)  * s);
+    g = Math.round(163 + (88  - 163) * s);
+    b = Math.round(74  + (12  - 74)  * s);
+  } else {
+    const s = (t - 0.5) * 2;
+    r = Math.round(234 + (185 - 234) * s);
+    g = Math.round(88  + (28  - 88)  * s);
+    b = Math.round(12  + (28  - 12)  * s);
+  }
+  return `rgb(${r},${g},${b})`;
+}
+
+function formatSave(sec) {
+  if (sec < 60)   return `−${sec}s`;
+  if (sec < 3600) return `−${sec / 60} min`;
+  const h = Math.floor(sec / 3600);
+  const m = (sec % 3600) / 60;
+  return m ? `−${h}h ${m}m` : `−${h}h`;
+}
+
+// ─── Formatting ───
+function formatPace(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function formatTime(sec) {
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function formatTimeShort(sec) {
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) {
+    return s === 0
+      ? `${h}:${String(m).padStart(2, '0')}`
+      : `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function parseTimeInput(str) {
+  if (!str || !str.trim()) return null;
+  str = str.trim();
+  let m = str.match(/^(\d+):(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const h = parseInt(m[1], 10), min = parseInt(m[2], 10), s = parseInt(m[3], 10);
+    if (min >= 60 || s >= 60) return null;
+    return h * 3600 + min * 60 + s;
+  }
+  m = str.match(/^(\d+):(\d{2})$/);
+  if (m) {
+    const min = parseInt(m[1], 10), s = parseInt(m[2], 10);
+    if (s >= 60) return null;
+    return min * 60 + s;
+  }
+  return null;
+}
+
+function parsePaceInput(str) {
+  if (!str || !str.trim()) return null;
+  str = str.trim().replace(/\/(km|mi|mile)$/i, '').trim();
+  const m = str.match(/^(\d+):(\d{2})$/);
+  if (!m) return null;
+  const min = parseInt(m[1], 10), s = parseInt(m[2], 10);
+  if (s >= 60) return null;
+  const secInUnit = min * 60 + s;
+  return useMiles ? secInUnit / KM_PER_MILE : secInUnit;
+}
+
+// ─── Data generation ───
+function buildChart2Data(distKey) {
+  const dist = DISTANCES[distKey];
+  const dt   = CHART2_DT[distKey];
+  const labels = [], data = [];
+  for (let t = dist.minT; t <= dist.maxT; t += dist.step) {
+    labels.push(t);
+    data.push(dvForTimeSaving(dist.km, t, dt));
+  }
+  return { labels, data };
+}
+
+function buildChart3Data() {
+  const labels = [], data = [];
+  for (let v = 2.0; v <= 26.01; v += 0.1) {
+    const speed = Math.round(v * 10) / 10;
+    labels.push(speed);
+    data.push(paceForSpeed(speed));
+  }
+  return { labels, data };
+}
+
+function chart3RangeForDist(distKey) {
+  const dist = DISTANCES[distKey];
+  // Include both heatmap times and all benchmark times so WRs are always in range
+  const speeds = [
+    ...dist.heatTimes.map(t => 3600 * dist.km / t),
+    ...(BENCHMARKS[distKey] || []).map(b => 3600 * dist.km / b.sec),
+  ];
+  return {
+    min: Math.max(2,  Math.floor(Math.min(...speeds)) - 1),
+    max: Math.min(26, Math.ceil(Math.max(...speeds))  + 1),
+  };
+}
+
+// ─── Benchmark annotations ───
+function getBenchmarkAnnotations(chartType, distKey) {
+  const result = {};
+  const dist   = DISTANCES[distKey];
+  const benches = BENCHMARKS[distKey];
+  if (!benches) return result;
+
+  // Stagger WR labels vertically so they don't overlap
+  const yPos    = { mens: 'start', womens: 'start', avg: 'end' };
+  const yAdjust = { mens: 4, womens: 44, avg: -4 };
+
+  benches.forEach(b => {
+    if (!activeBenchmarks[b.id]) return;
+
+    const labelContent = [b.label, formatTimeShort(b.sec)];
+    const sharedLabel = {
+      display: true,
+      content: labelContent,
+      position: yPos[b.id],
+      yAdjust: yAdjust[b.id],
+      backgroundColor: b.color,
+      color: '#fff',
+      font: { size: 9, weight: '700' },
+      padding: { x: 4, y: 2 },
+    };
+    const sharedLine = {
+      type: 'line',
+      borderColor: b.color + 'bb',
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+      label: sharedLabel,
+    };
+
+    if (chartType === 'chart2') {
+      if (b.sec < dist.minT || b.sec > dist.maxT) return;
+      result[`bench_${b.id}`] = { ...sharedLine, xMin: b.sec, xMax: b.sec };
+
+    } else {
+      const { min, max } = chart3RangeForDist(distKey);
+      const speed = 3600 * dist.km / b.sec;
+      if (speed < min || speed > max) return;
+      result[`bench_${b.id}`] = { ...sharedLine, xMin: speed, xMax: speed };
+    }
+  });
+
+  return result;
+}
+
+// ─── Chart creation ───
+function renderHeatmap(highlightTimeSec) {
+  const container = document.getElementById('chart1-container');
+  if (!container) return;
+
+  const dist  = DISTANCES[activeDistance];
+  const times = dist.heatTimes;
+  const saves = dist.heatSaves;
+
+  let closestRow = null;
+  if (highlightTimeSec !== null) {
+    let bestDiff = Infinity;
+    times.forEach(t => {
+      const d = Math.abs(t - highlightTimeSec);
+      if (d < bestDiff) { bestDiff = d; closestRow = t; }
+    });
+  }
+
+  const headerCells = saves.map(s => `<th>${formatSave(s)}</th>`).join('');
+
+  const rows = times.map(rowTime => {
+    const isHighlighted = closestRow === rowTime;
+    const cells = saves.map(s => {
+      const pct   = (s / rowTime) * 100;
+      const bg    = heatColor(pct);
+      const label = pct < 1 ? '<1%' : Math.round(pct) + '%';
+      return `<td class="heat-cell" style="background:${bg}" data-row-time="${rowTime}" data-save="${s}">${label}</td>`;
+    }).join('');
+    return `<tr class="${isHighlighted ? 'user-row' : ''}">
+      <td class="pace-label">${formatTimeShort(rowTime)}</td>${cells}
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="heatmap-outer">
+      <div class="heatmap-wrap">
+        <table class="heatmap-table">
+          <thead><tr><th class="row-label">Finish</th>${headerCells}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="heat-legend">
+        <span class="heat-swatch" style="background:${heatColor(0)}"></span> Easy
+        <span class="heat-swatch" style="background:${heatColor(7.5)}"></span> Moderate
+        <span class="heat-swatch" style="background:${heatColor(15)}"></span> Hard
+      </div>
+    </div>`;
+}
+
+function createChart2(canvasId, distKey) {
+  const { labels, data } = buildChart2Data(distKey);
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#16a34a',
+        backgroundColor: 'rgba(22,163,74,0.10)',
+        borderWidth: 2,
+        fill: true,
+        pointRadius: 0,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const t = items[0].parsed.x;
+              return `${formatTimeShort(t)}  ·  ${formatPace(displayPace(t / DISTANCES[distKey].km))}${paceUnit()}`;
+            },
+            label: (item) => {
+              const dv = item.parsed.y;
+              const dt = CHART2_DT[distKey];
+              return `To save ${formatSave(dt).replace('−','')}: run ${displaySpeed(dv).toFixed(4)} ${speedUnit()} faster`;
+            },
+            afterLabel: (item) => {
+              const dt = CHART2_DT[distKey];
+              const secPerKm = dt / DISTANCES[distKey].km;
+              const secInUnit = useMiles ? secPerKm * KM_PER_MILE : secPerKm;
+              return `≈ ${secInUnit < 10 ? secInUnit.toFixed(1) : Math.round(secInUnit)} sec${paceUnit()} quicker`;
+            },
+          }
+        },
+        annotation: { annotations: {} },
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: DISTANCES[distKey].minT,
+          max: DISTANCES[distKey].maxT,
+          ticks: {
+            stepSize: CHART2_TICK[distKey],
+            callback: (v) => formatTimeShort(v),
+            font: { size: 11 },
+            maxRotation: 0,
+          },
+          title: { display: true, text: 'Finish time', font: { size: 11 } },
+        },
+        y: {
+          title: { display: true, text: `Speed gain for ${formatSave(CHART2_DT[distKey])} (${speedUnit()})`, font: { size: 11 } },
+          ticks: {
+            callback: (v) => displaySpeed(v).toFixed(3),
+            font: { size: 11 },
+          },
+        }
+      }
+    }
+  });
+}
+
+function createChart3(canvasId) {
+  const { labels, data } = buildChart3Data();
+  const { min, max } = chart3RangeForDist(activeDistance);
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99,102,241,0.08)',
+        borderWidth: 2,
+        fill: true,
+        pointRadius: 0,
+        tension: 0,
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const v = items[0].parsed.x;
+              return `${displaySpeed(v).toFixed(1)} ${speedUnit()}  ·  ${formatPace(displayPace(3600 / v))}${paceUnit()}`;
+            },
+            label: () => null,
+            afterBody: (items) => {
+              const v = items[0].parsed.x;
+              return [
+                `Mile      ${formatTimeShort(Math.round(3600 * 1.60934 / v))}`,
+                `5K        ${formatTimeShort(Math.round(3600 * 5 / v))}`,
+                `10K       ${formatTimeShort(Math.round(3600 * 10 / v))}`,
+                `Half      ${formatTimeShort(Math.round(3600 * 21.0975 / v))}`,
+                `Marathon  ${formatTimeShort(Math.round(3600 * 42.195 / v))}`,
+              ];
+            },
+          }
+        },
+        annotation: { annotations: {} },
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min,
+          max,
+          ticks: {
+            stepSize: 1,
+            callback: (v) => {
+              if (useMiles) return v % 2 === 0 ? `${(v / KM_PER_MILE).toFixed(1)}` : null;
+              return `${v}`;
+            },
+            font: { size: 11 },
+          },
+          title: { display: true, text: `Speed (${speedUnit()})`, font: { size: 11 } },
+        },
+        y: {
+          reverse: true,
+          ticks: {
+            callback: (v) => formatPace(displayPace(v)),
+            font: { size: 11 },
+          },
+          title: { display: true, text: `Pace (min${paceUnit()})`, font: { size: 11 } },
+        }
+      }
+    }
+  });
+}
+
+// ─── Chart updates ───
+function updateChart3ForDistance(distKey) {
+  const chart = chartInstances.chart3;
+  if (!chart) return;
+  const { min, max } = chart3RangeForDist(distKey);
+  chart.options.scales.x.min = min;
+  chart.options.scales.x.max = max;
+  chart.update();
+}
+
+function updateChart2ForDistance(distKey) {
+  const chart = chartInstances.chart2;
+  if (!chart) return;
+  const { labels, data } = buildChart2Data(distKey);
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = data;
+  chart.options.scales.x.min = DISTANCES[distKey].minT;
+  chart.options.scales.x.max = DISTANCES[distKey].maxT;
+  chart.options.scales.x.ticks.stepSize = CHART2_TICK[distKey];
+  chart.options.scales.y.title.text = `Speed gain for ${formatSave(CHART2_DT[distKey])} (${speedUnit()})`;
+  chart.update();
+}
+
+function updateAnnotations() {
+  const chart2 = chartInstances.chart2;
+  const chart3 = chartInstances.chart3;
+  if (!chart2 || !chart3) return;
+
+  renderHeatmap(userTime);
+
+  // Start with benchmark lines (always visible when toggled on)
+  const annots2 = getBenchmarkAnnotations('chart2', activeDistance);
+  const annots3 = getBenchmarkAnnotations('chart3', activeDistance);
+
+  if (userTime !== null) {
+    const dist = DISTANCES[activeDistance];
+    const t    = userTime;
+
+    if (t > dist.minT && t < dist.maxT) {
+      annots2.userTimePoint = {
+        type: 'point',
+        xValue: t,
+        yValue: dvForTimeSaving(dist.km, t, CHART2_DT[activeDistance]),
+        radius: 7,
+        backgroundColor: 'rgba(22,163,74,0.85)',
+        borderColor: '#fff',
+        borderWidth: 2,
+      };
+    }
+
+    const userSpeed   = 3600 * dist.km / t;
+    const userPaceSec = t / dist.km;
+    annots3.vLine = {
+      type: 'line',
+      xMin: userSpeed, xMax: userSpeed,
+      borderColor: 'rgba(99,102,241,0.45)',
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+    };
+    annots3.hLine = {
+      type: 'line',
+      yMin: userPaceSec, yMax: userPaceSec,
+      borderColor: 'rgba(99,102,241,0.45)',
+      borderWidth: 1.5,
+      borderDash: [5, 4],
+    };
+    annots3.userPoint = {
+      type: 'point',
+      xValue: userSpeed,
+      yValue: userPaceSec,
+      radius: 7,
+      backgroundColor: 'rgba(99,102,241,0.9)',
+      borderColor: '#fff',
+      borderWidth: 2,
+      label: {
+        display: true,
+        content: `${formatPace(displayPace(userPaceSec))}${paceUnit()} · ${displaySpeed(userSpeed).toFixed(1)} ${speedUnit()}`,
+        position: 'start',
+        backgroundColor: 'rgba(99,102,241,0.9)',
+        color: '#fff',
+        font: { size: 10, weight: '600' },
+        padding: { x: 6, y: 3 },
+        xAdjust: 10,
+        yAdjust: -14,
+      },
+    };
+  }
+
+  chart2.options.plugins.annotation.annotations = annots2;
+  chart3.options.plugins.annotation.annotations = annots3;
+  chart2.update();
+  chart3.update();
+}
+
+// ─── Calculator ───
+function onTimeInput() {
+  if (isUpdatingFromCalc) return;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    const val = document.getElementById('input-time').value;
+    userTime = parseTimeInput(val);
+    if (userTime !== null) {
+      const paceSec = userTime / DISTANCES[activeDistance].km;
+      isUpdatingFromCalc = true;
+      document.getElementById('input-pace').value = formatPace(displayPace(paceSec));
+      isUpdatingFromCalc = false;
+    }
+    renderPresets(activeDistance);
+    renderCalcResult(activeDistance, userTime);
+    updateAnnotations();
+  }, 200);
+}
+
+function onPaceInput() {
+  if (isUpdatingFromCalc) return;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    const val = document.getElementById('input-pace').value;
+    const paceSec = parsePaceInput(val);
+    if (paceSec !== null) {
+      const totalSec = Math.round(paceSec * DISTANCES[activeDistance].km);
+      userTime = totalSec;
+      isUpdatingFromCalc = true;
+      document.getElementById('input-time').value = formatTime(totalSec);
+      isUpdatingFromCalc = false;
+    } else {
+      userTime = null;
+    }
+    renderPresets(activeDistance);
+    renderCalcResult(activeDistance, userTime);
+    updateAnnotations();
+  }, 200);
+}
+
+// ─── Units toggle ───
+function toggleUnits() {
+  useMiles = !useMiles;
+
+  if (userTime !== null) {
+    const paceSec = userTime / DISTANCES[activeDistance].km;
+    isUpdatingFromCalc = true;
+    document.getElementById('input-pace').value = formatPace(displayPace(paceSec));
+    isUpdatingFromCalc = false;
+  }
+
+  document.querySelectorAll('#unit-toggle button').forEach(b => {
+    b.classList.toggle('active', (b.dataset.unit === 'mi') === useMiles);
+  });
+
+  document.getElementById('label-speed').textContent = `Speed (${speedUnit()})`;
+  document.getElementById('label-pace').textContent  = `Pace (min${paceUnit()})`;
+  document.getElementById('label-input-pace').textContent = `Pace (per ${useMiles ? 'mile' : 'km'})`;
+  document.getElementById('hint-input-pace').textContent  = useMiles
+    ? 'e.g. 8:00 for min/mile'
+    : 'Changing one updates the other';
+
+  const chart2 = chartInstances.chart2;
+  const chart3 = chartInstances.chart3;
+  if (chart2) {
+    chart2.options.scales.y.title.text = `Speed gain for ${formatSave(CHART2_DT[activeDistance])} (${speedUnit()})`;
+    chart2.update();
+  }
+  if (chart3) {
+    chart3.options.scales.x.title.text = `Speed (${speedUnit()})`;
+    chart3.options.scales.y.title.text = `Pace (min${paceUnit()})`;
+    chart3.update();
+  }
+
+  renderCalcResult(activeDistance, userTime);
+  updateAnnotations();
+  renderBenchmarkTable(activeDistance);
+}
+
+// ─── Rendering ───
+function renderApp() {
+  const tabsHtml = Object.entries(DISTANCES).map(([key, d]) =>
+    `<button class="tab-btn${key === activeDistance ? ' active' : ''}" data-dist="${key}">${d.label}</button>`
+  ).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="app-header">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <h1>Running Pace &amp; Speed</h1>
+      <div class="unit-toggle" id="unit-toggle">
+        <button data-unit="km" class="active">km</button>
+        <button data-unit="mi">mi</button>
+      </div>
+    </div>
+    <p class="app-subtitle">Speed and pace have a hyperbolic relationship — the faster you run, the more effort each additional second costs.</p>
+
+    <div class="tab-bar" id="tab-bar">${tabsHtml}</div>
+
+    <div class="preset-row" id="preset-row"></div>
+
+    <div class="benchmark-row" id="benchmark-row">
+      <span class="bench-label">Benchmarks:</span>
+      <button class="bench-btn" data-bench="mens">♂ World Record</button>
+      <button class="bench-btn" data-bench="womens">♀ World Record</button>
+      <button class="bench-btn" data-bench="avg">Avg finisher</button>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-title">Speed Cost of Pace Improvements</div>
+        <div class="card-subtitle">% pace improvement needed — rows = your finish time, columns = time you want to save</div>
+        <div class="chart-container" id="chart1-container"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Speed Required to Save <span id="chart2-save-label">5 Min</span> — <span id="chart2-dist-label">Marathon</span></div>
+        <div class="card-subtitle">km/h increase needed at each finish time to hit your time-saving goal</div>
+        <div class="chart-container"><canvas id="chart2"></canvas></div>
+      </div>
+      <div class="card chart-full">
+        <div class="card-title">Pace vs Speed — The Hyperbola</div>
+        <div class="card-subtitle">Equal speed increments produce unequal pace improvements — the faster you go, the smaller the gain</div>
+        <div class="chart-container"><canvas id="chart3"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" id="benchmark-table-card">
+      <div class="card-title">Benchmark Reference</div>
+      <div id="benchmark-table-container"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Calculator</div>
+      <div class="calc-inputs">
+        <div class="form-group">
+          <label for="input-time">Finish Time</label>
+          <input type="text" id="input-time" placeholder="H:MM:SS or MM:SS" autocomplete="off" />
+          <div class="form-hint">e.g. 3:30:00 for a marathon</div>
+        </div>
+        <div class="form-group">
+          <label for="input-pace" id="label-input-pace">Pace (per km)</label>
+          <input type="text" id="input-pace" placeholder="MM:SS" autocomplete="off" />
+          <div class="form-hint" id="hint-input-pace">Changing one updates the other</div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card stat-empty">
+          <div class="stat-value" id="stat-speed">—</div>
+          <div class="stat-label" id="label-speed">Speed (km/h)</div>
+        </div>
+        <div class="stat-card stat-empty">
+          <div class="stat-value" id="stat-pace">—</div>
+          <div class="stat-label" id="label-pace">Pace (min/km)</div>
+        </div>
+        <div class="stat-card stat-empty">
+          <div class="stat-value" id="stat-dv">—</div>
+          <div class="stat-label">Speed gain for −1 min</div>
+        </div>
+      </div>
+
+      <div class="insight-box empty" id="insight-text">
+        Enter a finish time or pace above to see your personalised breakdown.
+      </div>
+    </div>
+  `;
+}
+
+function renderBenchmarkTable(distKey) {
+  const container = document.getElementById('benchmark-table-container');
+  if (!container) return;
+  const dist   = DISTANCES[distKey];
+  const benches = BENCHMARKS[distKey];
+  if (!benches) return;
+
+  const rows = benches.map(b => {
+    const paceSec = b.sec / dist.km;
+    const speed   = speedForPace(paceSec);
+    const hidden  = !activeBenchmarks[b.id] ? ' bench-row-hidden' : '';
+    return `<tr class="${hidden}">
+      <td class="bench-cat">
+        <span class="bench-dot" style="background:${b.color}"></span>${b.label}
+      </td>
+      <td class="bench-name">${b.name}</td>
+      <td>${formatTimeShort(b.sec)}</td>
+      <td>${formatPace(displayPace(paceSec))}${paceUnit()}</td>
+      <td>${displaySpeed(speed).toFixed(2)} ${speedUnit()}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `<table class="bench-table">
+    <thead><tr>
+      <th></th>
+      <th>Athlete / Context</th>
+      <th>Finish time</th>
+      <th>Avg pace</th>
+      <th>Avg speed</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderPresets(distKey) {
+  const row = document.getElementById('preset-row');
+  if (!row) return;
+  row.innerHTML = `<span class="preset-label">Presets:</span>` +
+    DISTANCES[distKey].presets.map(p =>
+      `<button class="preset-btn${userTime === p.sec ? ' active' : ''}" data-sec="${p.sec}">${p.label}</button>`
+    ).join('');
+}
+
+function applyPreset(sec) {
+  userTime = sec;
+  const paceSec = sec / DISTANCES[activeDistance].km;
+  isUpdatingFromCalc = true;
+  document.getElementById('input-time').value = formatTime(sec);
+  document.getElementById('input-pace').value = formatPace(displayPace(paceSec));
+  isUpdatingFromCalc = false;
+  renderPresets(activeDistance);
+  renderCalcResult(activeDistance, userTime);
+  updateAnnotations();
+}
+
+function renderCalcResult(distKey, timeSec) {
+  const dist    = DISTANCES[distKey];
+  const speedEl = document.getElementById('stat-speed');
+  const paceEl  = document.getElementById('stat-pace');
+  const dvEl    = document.getElementById('stat-dv');
+  const insightEl = document.getElementById('insight-text');
+  const cards   = document.querySelectorAll('.stat-card');
+
+  const labelSpeed = document.getElementById('label-speed');
+  const labelPace  = document.getElementById('label-pace');
+  if (labelSpeed) labelSpeed.textContent = `Speed (${speedUnit()})`;
+  if (labelPace)  labelPace.textContent  = `Pace (min${paceUnit()})`;
+
+  if (timeSec === null || timeSec <= 0) {
+    speedEl.textContent = '—';
+    paceEl.textContent = '—';
+    dvEl.textContent = '—';
+    cards.forEach(c => c.classList.add('stat-empty'));
+    insightEl.textContent = 'Enter a finish time or pace above to see your personalised breakdown.';
+    insightEl.classList.add('empty');
+    return;
+  }
+
+  const paceSec = timeSec / dist.km;
+  const speed   = speedForPace(paceSec);
+  let dv = null;
+  if (timeSec > 60) dv = dvForTimeSaving(dist.km, timeSec, 60);
+
+  speedEl.textContent = displaySpeed(speed).toFixed(2);
+  paceEl.textContent  = formatPace(displayPace(paceSec));
+  dvEl.textContent    = dv !== null ? displaySpeed(dv).toFixed(4) : '—';
+  cards.forEach(c => c.classList.remove('stat-empty'));
+
+  if (dv !== null) {
+    const slowerPaceSec = paceSec * 1.1;
+    const slowerDv = dvForTimeSaving(dist.km, slowerPaceSec * dist.km, 60);
+    const ratio = (dv / slowerDv).toFixed(1);
+    insightEl.innerHTML = `At your current ${dist.label} pace of <strong>${formatPace(displayPace(paceSec))}${paceUnit()}</strong>, you need to increase average speed by <strong>${displaySpeed(dv).toFixed(4)} ${speedUnit()}</strong> to save 1 minute. At <strong>${formatPace(displayPace(slowerPaceSec))}${paceUnit()}</strong> (10% slower), the same saving only costs <strong>${displaySpeed(slowerDv).toFixed(4)} ${speedUnit()}</strong> — <strong>${ratio}×</strong> cheaper.`;
+    insightEl.classList.remove('empty');
+  } else {
+    insightEl.textContent = 'Time too short to compute a 1-minute saving.';
+    insightEl.classList.remove('empty');
+  }
+}
+
+function initCharts() {
+  renderHeatmap(null);
+  chartInstances.chart2 = createChart2('chart2', activeDistance);
+  chartInstances.chart3 = createChart3('chart3');
+  renderPresets(activeDistance);
+  renderBenchmarkTable(activeDistance);
+}
+
+function attachEventListeners() {
+  // Unit toggle
+  document.getElementById('unit-toggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-unit]');
+    if (!btn) return;
+    if ((btn.dataset.unit === 'mi') !== useMiles) toggleUnits();
+  });
+
+  // Benchmark toggles
+  document.getElementById('benchmark-row').addEventListener('click', (e) => {
+    const btn = e.target.closest('.bench-btn');
+    if (!btn) return;
+    const type = btn.dataset.bench;
+    activeBenchmarks[type] = !activeBenchmarks[type];
+    btn.classList.toggle('active', activeBenchmarks[type]);
+    updateAnnotations();
+    renderBenchmarkTable(activeDistance);
+  });
+
+  // Tab bar
+  document.getElementById('tab-bar').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    const distKey = btn.dataset.dist;
+    if (distKey === activeDistance) return;
+    activeDistance = distKey;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('chart2-dist-label').textContent = DISTANCES[distKey].label;
+    document.getElementById('chart2-save-label').textContent = formatSave(CHART2_DT[distKey]).replace('−', '');
+    updateChart2ForDistance(distKey);
+    updateChart3ForDistance(distKey);
+    renderBenchmarkTable(distKey);
+    applyPreset(DISTANCES[distKey].presets[2].sec);
+  });
+
+  // Preset buttons
+  document.getElementById('app').addEventListener('click', (e) => {
+    const btn = e.target.closest('.preset-btn');
+    if (!btn) return;
+    applyPreset(parseInt(btn.dataset.sec, 10));
+  });
+
+  // Calculator inputs
+  document.getElementById('input-time').addEventListener('input', onTimeInput);
+  document.getElementById('input-pace').addEventListener('input', onPaceInput);
+
+  // ── Heatmap tooltip ──
+  function positionTooltip(e) {
+    const tip = document.getElementById('heat-tooltip');
+    const x = e.clientX + 14, y = e.clientY - 10;
+    tip.style.left = Math.min(x, window.innerWidth  - (tip.offsetWidth  || 230) - 8) + 'px';
+    tip.style.top  = Math.max(8, Math.min(y, window.innerHeight - (tip.offsetHeight || 120) - 8)) + 'px';
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.heat-cell');
+    if (!cell) return;
+    const rowTime = parseInt(cell.dataset.rowTime, 10);
+    const save    = parseInt(cell.dataset.save, 10);
+    const dist    = DISTANCES[activeDistance];
+    const pct     = (save / rowTime) * 100;
+    const paceImprKm = save / dist.km;
+    const paceImpr   = useMiles ? paceImprKm * KM_PER_MILE : paceImprKm;
+    const paceStr    = paceImpr < 10 ? paceImpr.toFixed(1) : Math.round(paceImpr);
+    const pUnit      = useMiles ? 'sec/mi' : 'sec/km';
+    const tip = document.getElementById('heat-tooltip');
+    tip.innerHTML = `
+      <div class="heat-tooltip-title">${formatSave(save)} off ${formatTime(rowTime)}</div>
+      <div class="heat-tooltip-stat">Run <strong>${paceStr} ${pUnit} faster</strong> throughout</div>
+      <div class="heat-tooltip-stat">= <strong>${Math.round(pct)}% pace improvement</strong></div>
+      <div class="heat-tooltip-note">From a ${formatTime(rowTime)} ${dist.label}, taking off ${formatSave(save).replace('−', '')} means averaging ${paceStr} ${pUnit} quicker the whole way.</div>`;
+    tip.style.display = 'block';
+    positionTooltip(e);
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    const tip = document.getElementById('heat-tooltip');
+    if (tip.style.display === 'none') return;
+    if (!e.target.closest('.heat-cell')) return;
+    positionTooltip(e);
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (!e.target.closest('.heat-cell')) return;
+    if (e.relatedTarget && e.relatedTarget.closest('.heat-cell')) return;
+    document.getElementById('heat-tooltip').style.display = 'none';
+  });
+}
+
+// ─── Main ───
+function main() {
+  renderApp();
+  const tip = document.createElement('div');
+  tip.id = 'heat-tooltip';
+  tip.className = 'heat-tooltip';
+  document.body.appendChild(tip);
+
+  initCharts();
+  attachEventListeners();
+  applyPreset(DISTANCES[activeDistance].presets[2].sec);
+}
+
+document.addEventListener('DOMContentLoaded', main);
+</script>
+</body>
+</html>
