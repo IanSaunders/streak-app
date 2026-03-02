@@ -642,6 +642,10 @@ function formatSave(sec) {
 }
 
 // ─── Formatting ───
+function formatPct(v, decimals = 2) {
+  return parseFloat(v.toFixed(decimals)) + '%';
+}
+
 function formatPace(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.round(sec % 60);
@@ -866,7 +870,7 @@ function createChart2(canvasId, distKey) {
               const t   = item.parsed.x;
               const dt  = CHART2_DT[activeDistance];
               const dv  = 3600 * DISTANCES[activeDistance].km / t * pct / 100;
-              return `To save ${formatSave(dt).replace('−','')}: run +${pct.toFixed(2)}% faster  (${displaySpeed(dv).toFixed(2)} ${speedUnit()})`;
+              return `To save ${formatSave(dt).replace('−','')}: run +${formatPct(pct)} faster  (${displaySpeed(dv).toFixed(2)} ${speedUnit()})`;
             },
             afterLabel: (item) => {
               const dt = CHART2_DT[activeDistance];
@@ -894,7 +898,7 @@ function createChart2(canvasId, distKey) {
         y: {
           title: { display: true, text: '% speed increase needed', font: { size: 11 } },
           ticks: {
-            callback: (v) => `${v.toFixed(2)}%`,
+            callback: (v) => formatPct(v),
             font: { size: 11 },
           },
         }
@@ -1334,7 +1338,7 @@ function renderCalcResult(distKey, timeSec) {
   speedEl.textContent = displaySpeed(speed).toFixed(2);
   paceEl.textContent  = formatPace(displayPace(paceSec));
   const pct = dv !== null ? 60 / (timeSec - 60) * 100 : null;
-  dvEl.textContent    = pct !== null ? `+${pct.toFixed(2)}%` : '—';
+  dvEl.textContent    = pct !== null ? `+${formatPct(pct)}` : '—';
   cards.forEach(c => c.classList.remove('stat-empty'));
 
   if (dv !== null) {
@@ -1343,7 +1347,7 @@ function renderCalcResult(distKey, timeSec) {
     const slowerDv = dvForTimeSaving(dist.km, slowerTimeSec, 60);
     const slowerPct = 60 / (slowerTimeSec - 60) * 100;
     const ratio = (pct / slowerPct).toFixed(1);
-    insightEl.innerHTML = `At your current ${dist.label} pace of <strong>${formatPace(displayPace(paceSec))}${paceUnit()}</strong>, saving 1 minute requires running <strong>+${pct.toFixed(2)}%</strong> faster (${displaySpeed(dv).toFixed(2)} ${speedUnit()}). At <strong>${formatPace(displayPace(slowerPaceSec))}${paceUnit()}</strong> (10% slower), the same minute only costs <strong>+${slowerPct.toFixed(2)}%</strong> — <strong>${ratio}×</strong> cheaper.`;
+    insightEl.innerHTML = `At your current ${dist.label} pace of <strong>${formatPace(displayPace(paceSec))}${paceUnit()}</strong>, saving 1 minute requires running <strong>+${formatPct(pct)}</strong> faster (${displaySpeed(dv).toFixed(2)} ${speedUnit()}). At <strong>${formatPace(displayPace(slowerPaceSec))}${paceUnit()}</strong> (10% slower), the same minute only costs <strong>+${formatPct(slowerPct)}</strong> — <strong>${ratio}×</strong> cheaper.`;
     insightEl.classList.remove('empty');
   } else {
     insightEl.textContent = 'Time too short to compute a 1-minute saving.';
