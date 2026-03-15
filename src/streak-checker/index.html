@@ -26,12 +26,6 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 1.5rem;
-    }
-
-    #app {
-      max-width: 860px;
-      margin: 0 auto;
     }
 
     /* ── Site nav ── */
@@ -39,8 +33,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 2.4rem 0;
-      margin-bottom: 2rem;
+      padding: 0 4rem;
+      height: 6.4rem;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
     }
 
     .site-nav-brand {
@@ -69,6 +65,12 @@
       transition: opacity 0.2s;
     }
     .site-nav-link:hover { opacity: 1; }
+
+    #app {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 1.5rem;
+    }
 
     /* ── Header ── */
     .app-header {
@@ -345,13 +347,20 @@
 
     /* ── Responsive ── */
     @media (max-width: 540px) {
-      body { padding: 1rem; }
+      .site-nav { padding: 0 1.5rem; }
+      #app { padding: 1.5rem 1rem; }
       .hero-number { font-size: 3.5rem; }
       .next-number { font-size: 2rem; }
     }
   </style>
 </head>
 <body>
+<nav class="site-nav">
+  <a href="../index.html" class="site-nav-brand">Running Tools</a>
+  <div class="site-nav-links">
+    <a href="https://ultra-daemon.com" class="site-nav-link">Blog</a>
+  </div>
+</nav>
   <div id="app">
     <!-- Rendered by JS -->
   </div>
@@ -800,12 +809,6 @@
 
     function header() {
       return `
-        <nav class="site-nav">
-          <a href="../index.html" class="site-nav-brand">Running Tools</a>
-          <div class="site-nav-links">
-            <a href="https://ultra-daemon.com" class="site-nav-link">Blog</a>
-          </div>
-        </nav>
         <div class="app-header">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>

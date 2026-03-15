@@ -28,12 +28,6 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 1.5rem;
-    }
-
-    #app {
-      max-width: 960px;
-      margin: 0 auto;
     }
 
     /* ── Site nav ── */
@@ -41,8 +35,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 2.4rem 0;
-      margin-bottom: 2rem;
+      padding: 0 4rem;
+      height: 6.4rem;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
     }
 
     .site-nav-brand {
@@ -72,8 +68,17 @@
     }
     .site-nav-link:hover { opacity: 1; }
 
+    #app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 1.5rem;
+    }
+
     /* ── Page title ── */
     .app-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       margin-bottom: 0.5rem;
     }
     .app-header h1 {
@@ -81,6 +86,7 @@
       font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--text);
+      flex: 1;
     }
     .app-subtitle {
       font-size: 0.875rem;
@@ -471,7 +477,8 @@
 
     /* ── Responsive ── */
     @media (max-width: 640px) {
-      body { padding: 0.75rem; }
+      .site-nav { padding: 0 1.5rem; }
+      #app { padding: 1.5rem 1rem; }
       .app-header h1 { font-size: 1.4rem; }
       .charts-grid { grid-template-columns: 1fr; }
       .calc-inputs { grid-template-columns: 1fr; }
@@ -483,6 +490,12 @@
   </style>
 </head>
 <body>
+<nav class="site-nav">
+  <a href="../index.html" class="site-nav-brand">Running Tools</a>
+  <div class="site-nav-links">
+    <a href="https://ultra-daemon.com" class="site-nav-link">Blog</a>
+  </div>
+</nav>
 <div id="app"></div>
 
 <script>
@@ -1379,18 +1392,12 @@ function renderApp() {
   ).join('');
 
   document.getElementById('app').innerHTML = `
-    <nav class="site-nav">
-      <a href="../index.html" class="site-nav-brand">Running Tools</a>
-      <div class="site-nav-links">
-        <div class="unit-toggle" id="unit-toggle">
-          <button data-unit="km" ${!useMiles ? 'class="active"' : ''}>km</button>
-          <button data-unit="mi" ${useMiles ? 'class="active"' : ''}>mi</button>
-        </div>
-        <a href="https://ultra-daemon.com" class="site-nav-link">Blog</a>
-      </div>
-    </nav>
     <div class="app-header">
       <h1>Running Pace &amp; Speed</h1>
+      <div class="unit-toggle" id="unit-toggle">
+        <button data-unit="km" ${!useMiles ? 'class="active"' : ''}>km</button>
+        <button data-unit="mi" ${useMiles ? 'class="active"' : ''}>mi</button>
+      </div>
     </div>
     <p class="app-subtitle">Speed and pace have a hyperbolic relationship — the faster you run, the more effort each additional second costs.</p>
 
