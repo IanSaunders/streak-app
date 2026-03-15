@@ -850,9 +850,69 @@
     }
 
     function renderSetup() {
-      const { clientId, clientSecret } = getCredentials();
+      const debugMode = new URLSearchParams(location.search).get('debug') === 'true';
+      const hasInjectedCreds = !!(STRAVA_CONFIG.clientId && STRAVA_CONFIG.clientSecret);
+
+      if (hasInjectedCreds && !debugMode) {
+        // Permissions explainer — credentials are pre-configured, just need OAuth consent
+        document.getElementById('app').innerHTML = `
+          ${header()}
+          <div class="card">
+            <div class="card-title">Connect to Strava</div>
+
+            <div class="notice" style="margin-bottom:1.25rem;border-color:#fbbf24;background:#fffbeb;">
+              <strong>⚠ Proceed with caution — personal tool, not for general use.</strong>
+              This app is built for a single Strava account. The API credentials are embedded
+              in the page source, which means anyone with the URL can connect their own Strava
+              account and read their data through this app's API key. Only use this if you
+              understand the implications. Do not share this URL with people you don't trust.
+            </div>
+
+            <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem;">
+              Clicking connect will take you to Strava to grant the following permissions:
+            </p>
+
+            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;">
+              <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="font-size:1rem;flex-shrink:0;">📖</span>
+                <div>
+                  <p style="font-size:0.875rem;font-weight:600;margin:0 0 0.2rem;">Read all activities</p>
+                  <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">
+                    Used to fetch your full run history and calculate your current streak.
+                  </p>
+                </div>
+              </div>
+              <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="font-size:1rem;flex-shrink:0;">✏️</span>
+                <div>
+                  <p style="font-size:0.875rem;font-weight:600;margin:0 0 0.2rem;">Update activities</p>
+                  <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">
+                    Used only when you click Fix or Fix all — to correct run title numbers on Strava.
+                    Nothing is changed without your explicit action.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn" id="connect-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+              Connect with Strava
+            </button>
+          </div>
+        `;
+        document.getElementById('connect-btn').addEventListener('click', redirectToStravaOAuth);
+        return;
+      }
+
+      // Credential form — shown when no injected creds, or debug mode
+      const saved = debugMode ? { clientId: '', clientSecret: '' } : getCredentials();
       document.getElementById('app').innerHTML = `
         ${header()}
+        ${debugMode ? `<div class="notice" style="margin-bottom:1rem;">Debug mode — credentials are not pre-filled.</div>` : ''}
         <div class="card">
           <div class="card-title">Connect to Strava</div>
           <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem;">
@@ -863,17 +923,17 @@
           <div class="form-group">
             <label for="client-id">Client ID</label>
             <input type="text" id="client-id" placeholder="12345"
-              value="${escapeHtml(clientId || '')}" autocomplete="off" />
+              value="${escapeHtml(saved.clientId || '')}" autocomplete="off" />
           </div>
 
           <div class="form-group">
             <label for="client-secret">Client Secret</label>
             <input type="password" id="client-secret" placeholder="••••••••••••••••"
-              value="${escapeHtml(clientSecret || '')}" autocomplete="off" />
+              value="${escapeHtml(saved.clientSecret || '')}" autocomplete="off" />
             <p class="form-hint">Stored only in your browser's localStorage.</p>
           </div>
 
-          <button class="btn btn-primary" id="connect-btn">
+          <button class="btn" id="connect-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               <polyline points="15 3 21 3 21 9"/>
@@ -1172,8 +1232,9 @@
     }
 
     async function main() {
-      // Seed credentials from config.js (overrides localStorage if both values present)
-      if (STRAVA_CONFIG.clientId && STRAVA_CONFIG.clientSecret) {
+      // Seed credentials from config.js unless in debug mode
+      const debugMode = new URLSearchParams(location.search).get('debug') === 'true';
+      if (!debugMode && STRAVA_CONFIG.clientId && STRAVA_CONFIG.clientSecret) {
         saveCredentials(STRAVA_CONFIG.clientId, STRAVA_CONFIG.clientSecret);
       }
 
