@@ -14,11 +14,11 @@
       --green: #16a34a;
       --red: #dc2626;
       --gray: #6b7280;
-      --bg: #f9fafb;
+      --bg: #FBFAFA;
       --card: #ffffff;
       --border: #e5e7eb;
-      --text: #111827;
-      --text-muted: #6b7280;
+      --text: #22272E;
+      --text-muted: #73737D;
     }
 
     body {
@@ -38,26 +38,37 @@
     .site-nav {
       display: flex;
       align-items: center;
-      height: 5rem;
+      justify-content: space-between;
+      padding: 2.4rem 0;
       margin-bottom: 2rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
-      margin-left: -1.5rem;
-      margin-right: -1.5rem;
-      padding: 0 1.5rem;
     }
 
-    .site-nav-back {
+    .site-nav-brand {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      text-decoration: none;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+    .site-nav-brand:hover { opacity: 1; }
+
+    .site-nav-links {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.15s;
+      gap: 2.4rem;
     }
-    .site-nav-back:hover { color: var(--text); }
+
+    .site-nav-link {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+    .site-nav-link:hover { opacity: 1; }
 
     /* ── Header ── */
     .app-header {
@@ -790,12 +801,10 @@
     function header() {
       return `
         <nav class="site-nav">
-          <a href="../index.html" class="site-nav-back">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M13 8H3M7 4l-4 4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Running Tools
-          </a>
+          <a href="../index.html" class="site-nav-brand">Running Tools</a>
+          <div class="site-nav-links">
+            <a href="https://ultra-daemon.com" class="site-nav-link">Blog</a>
+          </div>
         </nav>
         <div class="app-header">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">

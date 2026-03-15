@@ -34,39 +34,34 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 4rem;
-      height: 5.2rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--card);
+      padding: 2.4rem 4rem;
+      background: var(--bg);
     }
 
     .site-nav-brand {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       font-weight: 700;
       color: var(--text);
       letter-spacing: -0.01em;
+      text-decoration: none;
+    }
+
+    .site-nav-links {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 2.4rem;
     }
 
-    .site-nav-brand span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--orange);
-      display: inline-block;
-      flex-shrink: 0;
-    }
-
-    .site-nav-ext {
-      font-size: 1.3rem;
-      color: var(--text-muted);
+    .site-nav-link {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--text);
       text-decoration: none;
-      transition: color 0.15s;
+      opacity: 0.5;
+      transition: opacity 0.2s;
     }
 
-    .site-nav-ext:hover { color: var(--text); }
+    .site-nav-link:hover { opacity: 1; }
 
     /* ── Site Header ── */
     .site-header {
@@ -193,7 +188,7 @@
 
     /* ── Responsive ── */
     @media (max-width: 700px) {
-      .site-nav { padding: 0 2rem; }
+      .site-nav { padding: 2rem; }
       .site-header { padding: 3.5rem 2rem 3rem; margin-bottom: 4rem; }
       .site-header h1 { font-size: 3rem; }
       .site-header p { font-size: 1.6rem; }
@@ -205,8 +200,10 @@
 <body>
 
   <nav class="site-nav">
-    <div class="site-nav-brand"><span></span> Running Tools</div>
-    <a href="https://ultra-daemon.com" class="site-nav-ext" target="_blank" rel="noopener">ultra-daemon.com</a>
+    <span class="site-nav-brand">Running Tools</span>
+    <div class="site-nav-links">
+      <a href="https://ultra-daemon.com" class="site-nav-link">Blog</a>
+    </div>
   </nav>
 
   <header class="site-header">
