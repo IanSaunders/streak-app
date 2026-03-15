@@ -2,8 +2,8 @@
 set -e
 
 echo "=== build.sh ==="
-echo "STRAVA_CLIENT_ID set: ${STRAVA_CLIENT_ID:+yes}"
-echo "STRAVA_CLIENT_SECRET set: ${STRAVA_CLIENT_SECRET:+yes}"
+[ -n "$STRAVA_CLIENT_ID" ]     && echo "STRAVA_CLIENT_ID: found"
+[ -n "$STRAVA_CLIENT_SECRET" ] && echo "STRAVA_CLIENT_SECRET: found"
 
 if [ -z "$STRAVA_CLIENT_ID" ] || [ -z "$STRAVA_CLIENT_SECRET" ]; then
   echo "WARNING: one or both Strava env vars are empty — config.js will have no credentials"
