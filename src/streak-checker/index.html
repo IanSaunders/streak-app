@@ -948,6 +948,7 @@
       const athleteName = localStorage.getItem(LS.ATHLETE_NAME) || '';
 
       const errCount = streakRuns.filter(r => r.status === 'error').length;
+      const fixableCount = streakRuns.filter(r => (r.status === 'error' || r.status === 'no-number') && r.expectedNumber !== null).length;
 
       // Build table rows (descending by date)
       const tableRows = [...streakRuns].reverse().map(run => {
@@ -1035,7 +1036,10 @@
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
             <p class="section-title">Streak Run History</p>
-            ${validationSummary}
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              ${validationSummary}
+              ${fixableCount > 0 ? `<button class="btn" id="fix-all-btn">Fix all (${fixableCount})</button>` : ''}
+            </div>
           </div>
           ${streakRuns.length === 0
             ? `<p style="color:var(--text-muted);font-size:0.875rem;">No runs in current streak.</p>`
@@ -1067,6 +1071,35 @@
         clearAll();
         renderSetup();
       });
+
+      const fixAllBtn = document.getElementById('fix-all-btn');
+      if (fixAllBtn) {
+        fixAllBtn.addEventListener('click', async () => {
+          const fixBtns = [...document.querySelectorAll('.btn-fix')];
+          if (fixBtns.length === 0) return;
+          fixAllBtn.disabled = true;
+          fixAllBtn.textContent = `Fixing 0 / ${fixBtns.length}…`;
+          let done = 0;
+          for (const btn of fixBtns) {
+            const id = btn.dataset.id;
+            const newName = btn.dataset.new;
+            const row = btn.closest('tr');
+            const cell = btn.closest('td');
+            cell.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Updating…</span>';
+            const result = await updateActivityName(id, newName);
+            done++;
+            fixAllBtn.textContent = `Fixing ${done} / ${fixBtns.length}…`;
+            if (result.ok) {
+              const titleAnchor = row.querySelector('.td-title a');
+              if (titleAnchor) titleAnchor.textContent = newName;
+              cell.innerHTML = '<span style="color:var(--green);font-size:0.8rem;font-weight:600;">✓ Updated</span>';
+            } else {
+              cell.innerHTML = `<span style="color:var(--red);font-size:0.78rem;">${escapeHtml(result.error)}</span>`;
+            }
+          }
+          fixAllBtn.textContent = `✓ All fixed`;
+        });
+      }
 
       // Fix title flow via event delegation
       document.getElementById('app').addEventListener('click', async e => {
