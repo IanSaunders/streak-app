@@ -35,39 +35,56 @@
       margin: 0 auto;
     }
 
-    /* ── Back link ── */
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--orange);
-      text-decoration: none;
-      margin-bottom: 1.2rem;
-      letter-spacing: 0.02em;
-      transition: opacity 0.15s;
-    }
-    .back-link:hover { opacity: 0.75; }
-
-    /* ── Header ── */
-    .app-header {
+    /* ── Site nav ── */
+    .site-nav {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      margin-bottom: 0.4rem;
+      justify-content: space-between;
+      height: 5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+      margin-left: -1.5rem;
+      margin-right: -1.5rem;
+      padding: 0 1.5rem;
     }
-    .app-header svg { color: var(--orange); flex-shrink: 0; }
-    .app-header h1 {
-      font-size: 1.4rem;
+
+    .site-nav-back {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .site-nav-back:hover { color: var(--text); }
+
+    .site-nav-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.3rem;
       font-weight: 700;
+      color: var(--text);
+    }
+    .site-nav-title svg { color: var(--orange); }
+
+    /* ── Page title ── */
+    .app-header {
+      margin-bottom: 0.5rem;
+    }
+    .app-header h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       color: var(--text);
     }
     .app-subtitle {
       font-size: 0.875rem;
       color: var(--text-muted);
       margin-bottom: 1.5rem;
-      padding-left: 0.2rem;
     }
 
     /* ── Unit toggle ── */
@@ -454,8 +471,7 @@
     /* ── Responsive ── */
     @media (max-width: 640px) {
       body { padding: 0.75rem; }
-      .app-header h1 { font-size: 1.1rem; }
-      .app-header svg { width: 22px; height: 22px; }
+      .app-header h1 { font-size: 1.4rem; }
       .charts-grid { grid-template-columns: 1fr; }
       .calc-inputs { grid-template-columns: 1fr; }
       .stat-row { grid-template-columns: repeat(3, 1fr); }
@@ -1362,21 +1378,20 @@ function renderApp() {
   ).join('');
 
   document.getElementById('app').innerHTML = `
-    <a href="../index.html" class="back-link">
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M13 8H3M7 4l-4 4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      All tools
-    </a>
-    <div class="app-header">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
-      <h1>Running Pace &amp; Speed</h1>
+    <nav class="site-nav">
+      <a href="../index.html" class="site-nav-back">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M13 8H3M7 4l-4 4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Running Tools
+      </a>
       <div class="unit-toggle" id="unit-toggle">
         <button data-unit="km" ${!useMiles ? 'class="active"' : ''}>km</button>
         <button data-unit="mi" ${useMiles ? 'class="active"' : ''}>mi</button>
       </div>
+    </nav>
+    <div class="app-header">
+      <h1>Running Pace &amp; Speed</h1>
     </div>
     <p class="app-subtitle">Speed and pace have a hyperbolic relationship — the faster you run, the more effort each additional second costs.</p>
 

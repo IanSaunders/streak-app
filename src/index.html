@@ -28,22 +28,52 @@
       min-height: 100vh;
     }
 
+    /* ── Top nav ── */
+    .site-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4rem;
+      height: 5.2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .site-nav-brand {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .site-nav-brand span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .site-nav-ext {
+      font-size: 1.3rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .site-nav-ext:hover { color: var(--text); }
+
     /* ── Site Header ── */
     .site-header {
-      padding: 6rem 4rem 5rem;
+      padding: 5rem 4rem 4.5rem;
       max-width: 1220px;
       margin: 0 auto;
       border-bottom: 1px solid var(--border);
       margin-bottom: 6rem;
-    }
-
-    .site-header .eyebrow {
-      font-size: 1.2rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--orange);
-      margin-bottom: 1.2rem;
     }
 
     .site-header h1 {
@@ -160,45 +190,25 @@
       transform: translateX(4px);
     }
 
-    /* ── Footer ── */
-    .site-footer {
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: 2.4rem 4rem;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .site-footer a {
-      font-size: 1.3rem;
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    .site-footer a:hover { color: var(--text); }
-
-    .site-footer .dot {
-      color: var(--border);
-      font-size: 1.3rem;
-    }
-
     /* ── Responsive ── */
     @media (max-width: 700px) {
-      .site-header { padding: 4rem 2rem 3.5rem; margin-bottom: 4rem; }
+      .site-nav { padding: 0 2rem; }
+      .site-header { padding: 3.5rem 2rem 3rem; margin-bottom: 4rem; }
       .site-header h1 { font-size: 3rem; }
       .site-header p { font-size: 1.6rem; }
       .tools-grid { padding: 0 2rem 5rem; grid-template-columns: 1fr; gap: 2.4rem; }
       .tool-body { padding: 2rem 2.2rem 2.4rem; }
-      .site-footer { padding: 2rem; }
     }
   </style>
 </head>
 <body>
 
+  <nav class="site-nav">
+    <div class="site-nav-brand"><span></span> Running Tools</div>
+    <a href="https://ultra-daemon.com" class="site-nav-ext" target="_blank" rel="noopener">ultra-daemon.com</a>
+  </nav>
+
   <header class="site-header">
-    <p class="eyebrow">Running Tools</p>
     <h1>Train smarter.<br>Race faster.</h1>
     <p>A small collection of tools for analysing pace, tracking streaks, and understanding performance.</p>
   </header>
@@ -437,11 +447,6 @@
 
   </main>
 
-  <footer class="site-footer">
-    <a href="https://ultra-daemon.com">ultra-daemon.com</a>
-    <span class="dot">·</span>
-    <a href="https://www.strava.com/athletes/ultradaemon" target="_blank" rel="noopener">Strava</a>
-  </footer>
 
 </body>
 </html>
