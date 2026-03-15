@@ -525,17 +525,21 @@
         history.replaceState(null, '', cleanUrl);
 
         if (!res.ok) {
-          // Stale or reused code — redirect to setup
-          renderSetup();
+          let detail = `HTTP ${res.status}`;
+          try {
+            const body = await res.json();
+            if (body.message) detail += `: ${body.message}`;
+          } catch {}
+          renderError(`Strava token exchange failed (${detail}). Check that your Client ID and Client Secret in config.js are correct.`);
           return true;
         }
 
         const data = await res.json();
         saveTokens(data);
         await loadAndRenderDashboard();
-      } catch {
+      } catch (err) {
         history.replaceState(null, '', cleanUrl);
-        renderSetup();
+        renderError(`Could not connect to Strava: ${err.message}`);
       }
 
       return true;
