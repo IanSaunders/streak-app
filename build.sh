@@ -9,7 +9,7 @@ if [ -z "$STRAVA_CLIENT_ID" ] || [ -z "$STRAVA_CLIENT_SECRET" ]; then
   echo "WARNING: one or both Strava env vars are empty — config.js will have no credentials"
 fi
 
-cat > src/streak-checker/config.js <<EOF
+cat > streak-checker/config.js <<EOF
 window.STRAVA_CONFIG = {
   clientId:     '${STRAVA_CLIENT_ID}',
   clientSecret: '${STRAVA_CLIENT_SECRET}',
