@@ -703,18 +703,15 @@
 
       return sorted.map((run, i) => {
         const parsedNumber = parseLastNumber(run.name);
-        let expectedNumber = null;
+        const expectedNumber = i + 1;
         let status = 'no-number';
 
-        if (anchorIndex !== -1) {
-          expectedNumber = anchorNumber + (i - anchorIndex);
-          if (parsedNumber === null) {
-            status = 'no-number';
-          } else if (parsedNumber === expectedNumber) {
-            status = 'ok';
-          } else {
-            status = 'error';
-          }
+        if (parsedNumber === null) {
+          status = 'no-number';
+        } else if (parsedNumber === expectedNumber) {
+          status = 'ok';
+        } else {
+          status = 'error';
         }
 
         return {
@@ -770,19 +767,17 @@
         if (n !== null) { anchorIdx = i; anchorNumber = n; break; }
       }
 
-      // Pass 2: re-pick each day now that we know the expected number
+      // Pass 2: re-pick each day using 1-based expected number
       const pickedRuns = streakDatesAsc.map((date, i) => {
-        const expected = anchorIdx !== -1 ? anchorNumber + (i - anchorIdx) : null;
-        return pickStreakRun(byDate.get(date) || [], expected);
+        return pickStreakRun(byDate.get(date) || [], i + 1);
       });
 
       // Validate the one-per-day picks
       const streakRuns = validateStreakNumbers(pickedRuns);
 
-      // Most recent streak run drives the "next number" display
+      // Next number is always streak length + 1
       const mostRecentRun = pickedRuns[pickedRuns.length - 1] || null;
-      const lastParsed = mostRecentRun ? parseLastNumber(mostRecentRun.name) : null;
-      const nextNumber = lastParsed !== null ? lastParsed + 1 : null;
+      const nextNumber = streakDates.length + 1;
 
       // Totals across all picked streak runs
       const totalDistance = pickedRuns.reduce((sum, r) => sum + (r.distance || 0), 0);
