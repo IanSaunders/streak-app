@@ -241,6 +241,16 @@
     .btn-primary   { background: var(--orange); color: #fff; }
     .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-danger    { background: var(--card); color: var(--red); border: 1px solid #fecaca; }
+    .btn-fix { display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:5px; font-size:0.75rem; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-muted); transition:all 0.15s; }
+    .btn-fix:hover { border-color:var(--orange); color:var(--orange); }
+    .fix-preview { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.82rem; }
+    .fix-old { color:var(--text-muted); text-decoration:line-through; }
+    .fix-arrow { color:var(--text-muted); }
+    .fix-new { color:var(--text); font-weight:600; }
+    .btn-fix-confirm { display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:5px; font-size:0.75rem; font-weight:600; cursor:pointer; border:none; background:var(--orange); color:#fff; transition:opacity 0.15s; }
+    .btn-fix-confirm:hover { opacity:0.85; }
+    .btn-fix-cancel  { display:inline-flex; align-items:center; padding:0.2rem 0.6rem; border-radius:5px; font-size:0.75rem; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--card); color:var(--text-muted); transition:opacity 0.15s; }
+    .btn-fix-cancel:hover { opacity:0.85; }
     .btn-row {
       display: flex;
       gap: 0.75rem;
@@ -479,7 +489,7 @@
       url.searchParams.set('redirect_uri',  redirectUri);
       url.searchParams.set('response_type', 'code');
       url.searchParams.set('approval_prompt', 'auto');
-      url.searchParams.set('scope',         'activity:read_all');
+      url.searchParams.set('scope',         'activity:read_all,activity:write');
       location.href = url.toString();
     }
 
@@ -569,6 +579,27 @@
       }
 
       return res.json();
+    }
+
+    // Build the corrected title by replacing the last number, or appending if none
+    function buildFixedName(name, expectedNumber) {
+      const matches = [...name.matchAll(/\d+/g)];
+      if (matches.length === 0) return `${name} ${expectedNumber}`;
+      const last = matches[matches.length - 1];
+      return name.slice(0, last.index) + expectedNumber + name.slice(last.index + last[0].length);
+    }
+
+    async function updateActivityName(activityId, newName) {
+      const token = await ensureValidToken();
+      if (!token) return { ok: false, error: 'Not authenticated' };
+      const res = await fetch(`${STRAVA_API}/activities/${activityId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (res.status === 403) return { ok: false, error: 'Missing write permission — please disconnect and reconnect to grant edit access.' };
+      if (!res.ok) return { ok: false, error: `Strava error: ${res.status}` };
+      return { ok: true };
     }
 
     async function fetchAllRuns(accessToken, onRun) {
@@ -919,8 +950,11 @@
       const errCount = streakRuns.filter(r => r.status === 'error').length;
 
       // Build table rows (descending by date)
-      const tableRows = [...streakRuns].reverse().map(run => `
-        <tr>
+      const tableRows = [...streakRuns].reverse().map(run => {
+        const canFix = (run.status === 'error' || run.status === 'no-number') && run.expectedNumber !== null;
+        const fixedName = canFix ? buildFixedName(run.name, run.expectedNumber) : '';
+        return `
+        <tr data-activity-id="${run.id}">
           <td class="td-date">${escapeHtml(formatDate(run.localDate))}</td>
           <td class="td-title">
             <a href="https://www.strava.com/activities/${run.id}" target="_blank" rel="noopener">${escapeHtml(run.name)}</a>
@@ -929,9 +963,14 @@
           <td class="td-dist">${formatDistance(run.distance)}</td>
           <td class="td-num">${run.parsedNumber !== null ? run.parsedNumber : '—'}</td>
           <td class="td-num">${run.expectedNumber !== null ? run.expectedNumber : '—'}</td>
-          <td>${badgeHtml(run.status)}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              ${badgeHtml(run.status)}
+              ${canFix ? `<button class="btn-fix" data-id="${run.id}" data-old="${escapeHtml(run.name)}" data-new="${escapeHtml(fixedName)}">Fix</button>` : ''}
+            </div>
+          </td>
         </tr>
-      `).join('');
+      `}).join('');
 
       const nextRunCard = nextNumber !== null
         ? `<div class="card next-run">
@@ -1027,6 +1066,51 @@
       document.getElementById('disconnect-btn').addEventListener('click', () => {
         clearAll();
         renderSetup();
+      });
+
+      // Fix title flow via event delegation
+      document.getElementById('app').addEventListener('click', async e => {
+        // Show preview
+        if (e.target.matches('.btn-fix')) {
+          const btn = e.target;
+          const oldName = btn.dataset.old;
+          const newName = btn.dataset.new;
+          const id = btn.dataset.id;
+          const cell = btn.closest('td');
+          cell.innerHTML = `
+            <div class="fix-preview">
+              <span class="fix-old">${escapeHtml(oldName)}</span>
+              <span class="fix-arrow">→</span>
+              <span class="fix-new">${escapeHtml(newName)}</span>
+              <button class="btn-fix-confirm" data-id="${id}" data-new="${escapeHtml(newName)}">Confirm</button>
+              <button class="btn-fix-cancel" data-id="${id}">Cancel</button>
+            </div>`;
+        }
+
+        // Confirm: call API
+        if (e.target.matches('.btn-fix-confirm')) {
+          const btn = e.target;
+          const id = btn.dataset.id;
+          const newName = btn.dataset.new;
+          btn.textContent = '…';
+          btn.disabled = true;
+          const result = await updateActivityName(id, newName);
+          const cell = btn.closest('td');
+          if (result.ok) {
+            // Update the title cell in the same row
+            const row = btn.closest('tr');
+            const titleAnchor = row.querySelector('.td-title a');
+            if (titleAnchor) titleAnchor.textContent = newName;
+            cell.innerHTML = '<span style="color:var(--green);font-size:0.8rem;font-weight:600;">✓ Updated</span>';
+          } else {
+            cell.innerHTML = `<span style="color:var(--red);font-size:0.78rem;">${escapeHtml(result.error)}</span>`;
+          }
+        }
+
+        // Cancel: reload dashboard to restore original state
+        if (e.target.matches('.btn-fix-cancel')) {
+          loadAndRenderDashboard();
+        }
       });
     }
 
