@@ -33,6 +33,21 @@
       margin: 0 auto;
     }
 
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--orange);
+      text-decoration: none;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.02em;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 0.75; }
+
     /* ── Header ── */
     .app-header {
       display: flex;
@@ -762,6 +777,12 @@
 
     function header() {
       return `
+        <a href="../index.html" class="back-link">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 8H3M7 4l-4 4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          All tools
+        </a>
         <div class="app-header">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
